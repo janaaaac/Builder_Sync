@@ -1,0 +1,26 @@
+{
+  "name": "builder_sync",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/janaaaac/Builder_Sync.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/janaaaac/Builder_Sync/issues"
+  },
+  "homepage": "https://github.com/janaaaac/Builder_Sync#readme",
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  }
+}
