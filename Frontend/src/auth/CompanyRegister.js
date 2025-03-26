@@ -4,7 +4,6 @@ import {
   HardHat, 
   Building2, 
   User, 
-  Briefcase, 
   Phone, 
   MapPin, 
   Mail, 
@@ -13,14 +12,13 @@ import {
   ChevronRight,
   ChevronLeft,
   CheckCircle2,
+  XIcon,
   Shield,
   Globe2,
   Users,
-  Cog,
   AlertCircle,
   Calendar,
   FileText,
-  Award,
   Link
 } from 'lucide-react';
 
@@ -696,6 +694,12 @@ const CompanyRegister = () => {
                                 <FileText className="h-16 w-16 text-[#EA540C]" />
                               </div>
                             )}
+                            <button 
+                              onClick={() => removeFile('specializedLicenses', previews.specializedLicenses[previews.specializedLicenses.length-1].id)}
+                              className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center"
+                            >
+                              <XIcon className="w-3 h-3 text-white" />
+                            </button>
                           </div>
                         ) : (
                           <Upload className="h-6 w-6 text-[#737373] mx-auto mb-2" />
@@ -741,6 +745,12 @@ const CompanyRegister = () => {
                                 <FileText className="h-16 w-16 text-[#EA540C]" />
                               </div>
                             )}
+                            <button 
+                              onClick={() => removeFile('isoCertifications', previews.isoCertifications[previews.isoCertifications.length-1].id)}
+                              className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center"
+                            >
+                              <XIcon className="w-3 h-3 text-white" />
+                            </button>
                           </div>
                         ) : (
                           <Upload className="h-6 w-6 text-[#737373] mx-auto mb-2" />
@@ -780,6 +790,12 @@ const CompanyRegister = () => {
                             alt="Company Logo Preview" 
                             className="h-32 max-w-full mx-auto rounded object-contain"
                           />
+                          <button 
+                            onClick={() => removeFile('companyLogo', previews.companyLogo.id)}
+                            className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center"
+                          >
+                            <XIcon className="w-3 h-3 text-white" />
+                          </button>
                         </div>
                       ) : (
                         <Upload className="h-6 w-6 text-[#737373] mx-auto mb-2" />
@@ -835,9 +851,12 @@ const CompanyRegister = () => {
       <div className="mt-6 text-center">
         <p className="text-[#737373]">
           Already have an account?{' '}
-          <a href="#" className="text-[#EA540C] hover:text-[#EA540C]/80 transition-colors">
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="text-[#EA540C] hover:text-[#EA540C]/80 transition-colors"
+          >
             Sign in
-          </a>
+          </button>
         </p>
       </div>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Users, 
@@ -7,22 +8,23 @@ import {
 } from 'lucide-react';
 
 const RegistrationCategory = () => {
+  const navigate = useNavigate();
   const [hoverStakeholder, setHoverStakeholder] = useState(false);
   const [hoverCompany, setHoverCompany] = useState(false);
 
   const handleStakeholderRegistration = () => {
-    // Navigation logic for stakeholder registration
-    console.log('Navigate to Stakeholder Registration');
+    // Navigate to client registration page
+    navigate('/client-register');
   };
 
   const handleCompanyRegistration = () => {
-    // Navigation logic for company registration
-    console.log('Navigate to Company Registration');
+    // Navigate to company registration page
+    navigate('/Company-register');
   };
 
   const handleBack = () => {
-    // Navigation logic to go back
-    console.log('Go Back');
+    // Navigate back to home/landing page
+    navigate('/');
   };
 
   return (
