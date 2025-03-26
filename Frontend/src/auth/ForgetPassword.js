@@ -18,12 +18,12 @@ const ForgetPasswordPage = () => {
     console.log('Go Back to Login');
   };
 
-  const validateEmail = (email: string) => {
+  const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
     
     // Reset previous errors

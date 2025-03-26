@@ -1,0 +1,7 @@
+.animate-fade-in-right, .animate-fade-in-up, .animate-fade-in {
+  animation-fill-mode: both;
+}
+
+[style*="animation-delay"] {
+  opacity: 0;
+}

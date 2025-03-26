@@ -11,14 +11,14 @@ const EnterResetCodePage = () => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const inputRefs = useRef([]); // Removed TypeScript generic
 
   const handleBack = () => {
     // Navigation logic to go back to forgot password
     console.log('Go Back to Forgot Password');
   };
 
-  const handleCodeChange = (index: number, value: string) => {
+  const handleCodeChange = (index, value) => { // Removed type annotations
     // Ensure only numbers are entered
     if (/^\d*$/.test(value)) {
       const newCode = [...code];
@@ -32,14 +32,14 @@ const EnterResetCodePage = () => {
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (index, e) => { // Removed type annotations
     // Handle backspace to move to previous input
     if (e.key === 'Backspace' && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
+  const handleVerifyCode = async (e) => { // Removed type annotation
     e.preventDefault();
     
     // Reset previous errors

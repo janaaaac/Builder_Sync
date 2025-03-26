@@ -16,7 +16,7 @@ import {
   Shield,
   Globe2,
   Users,
-  Cog,
+  // Remove unused Cog import
   AlertCircle
 } from 'lucide-react';
 
@@ -136,7 +136,7 @@ const ClientRegister = () => {
         }
       });
 
-      // Make API call
+      // Make API call and use the response
       const response = await axios.post(
         'http://localhost:5001/api/clients/create',
         formDataToSend,
@@ -146,8 +146,11 @@ const ClientRegister = () => {
           },
         }
       );
+      
+      // Use the response (add this line)
+      console.log('Registration successful:', response.data);
 
-      // Show success popup instead of just message
+      // Show success popup
       setShowSuccessPopup(true);
       
     } catch (error) {
@@ -504,7 +507,7 @@ const ClientRegister = () => {
                           <div className="relative mb-2">
                             <img 
                               src={previews.nicPassportFile} 
-                              alt="NIC/Passport Preview" 
+                              alt="NIC/Passport" 
                               className="h-32 max-w-full mx-auto rounded object-contain"
                             />
                           </div>
@@ -539,7 +542,7 @@ const ClientRegister = () => {
                           <div className="relative mb-2">
                             <img 
                               src={previews.profilePicture} 
-                              alt="Profile Picture Preview" 
+                              alt="Profile" 
                               className="h-32 max-w-full mx-auto rounded-full object-cover"
                             />
                           </div>
@@ -598,9 +601,12 @@ const ClientRegister = () => {
       <div className="mt-6 text-center">
         <p className="text-[#737373]">
           Already have an account?{' '}
-          <a href="#" className="text-[#EA540C] hover:text-[#EA540C]/80 transition-colors">
+          <button 
+            onClick={() => window.location.href = '/login'} 
+            className="text-[#EA540C] hover:text-[#EA540C]/80 transition-colors"
+          >
             Sign in
-          </a>
+          </button>
         </p>
       </div>
 

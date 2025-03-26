@@ -17,7 +17,7 @@ const CreateNewPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const calculatePasswordStrength = (pwd: string) => {
+  const calculatePasswordStrength = (pwd) => {
     let strength = 0;
     if (pwd.length >= 8) strength++;
     if (/[A-Z]/.test(pwd)) strength++;
@@ -27,13 +27,13 @@ const CreateNewPasswordPage = () => {
     return strength;
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordChange = (e) => {
     const newPassword = e.target.value;
     setPassword(newPassword);
     setPasswordStrength(calculatePasswordStrength(newPassword));
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
     
     // Reset previous errors
