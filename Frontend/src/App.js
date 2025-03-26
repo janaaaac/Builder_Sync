@@ -4,13 +4,14 @@ import ClientRegister from './auth/ClientRegister';
 import LandingPage from './Landing';
 import CompanyRegister from './auth/CompanyRegister';
 import RegistrationCategory from './Landing/RegisterCategory';
+import Login from './test/testlogin';
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Login />} />
           <Route path="/client-register" element={<ClientRegister />} />
           <Route path="/Company-register" element={<CompanyRegister />} />
           <Route path="/register-category" element={<RegistrationCategory/>} />
