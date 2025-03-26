@@ -17,8 +17,9 @@ const CompanySchema = new mongoose.Schema({
   websiteURL: { type: String },
   cidaRegNumber: { type: String, required: true },
   cidaGrade: { type: String, required: true },
-  specializedLicenses: [{ type: String }], // Array for multiple licenses
-  isoCertifications: [{ type: String }], // Array for multiple certifications
+  specializedLicenses: { type: [String] }, // Array of strings
+  isoCertifications: { type: [String] },   // Array of strings
+  isApproved: { type: Boolean, default: false }, // Admin Approval
 });
 
 // Hash password before saving

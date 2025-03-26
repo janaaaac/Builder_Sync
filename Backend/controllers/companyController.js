@@ -22,12 +22,13 @@ exports.createCompany = async (req, res) => {
 
     // Retrieve uploaded files from AWS S3
     const companyLogo = req.files["companyLogo"] ? req.files["companyLogo"][0].location : null;
-    const specializedLicenses = req.files["specializedLicenses"]
-      ? req.files["specializedLicenses"].map((file) => file.location)
-      : [];
-    const isoCertifications = req.files["isoCertifications"]
-      ? req.files["isoCertifications"].map((file) => file.location)
-      : [];
+   // In controllers/companyController.js
+const specializedLicenses = req.files["specializedLicenses"]
+? req.files["specializedLicenses"].map((file) => file.location)
+: [];
+const isoCertifications = req.files["isoCertifications"]
+? req.files["isoCertifications"].map((file) => file.location)
+: [];
 
     // Check if email or username already exists
     const existingCompany = await Company.findOne({ $or: [{ email }, { username }] });
