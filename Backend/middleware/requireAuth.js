@@ -10,7 +10,7 @@ const requireAuth = async (req, res, next) => {
 
   try {
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Try to find user in Client model first
     let user = await Client.findById(decoded.id).select("-password");
