@@ -10,7 +10,7 @@ import {
   LogIn 
 } from 'lucide-react';
 
-const LoginForm = () => {
+const LoginPage = () => {
   const [loginType, setLoginType] = useState('email');
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -285,4 +285,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default LoginPage;
