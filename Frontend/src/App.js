@@ -6,16 +6,21 @@ import CompanyRegister from './auth/CompanyRegister';
 import RegistrationCategory from './Landing/RegisterCategory';
 import Login from './test/testlogin';
 import LoginPage from './auth/login';
+import AdminSideBar from './Admin/Sidebar';
+import ClientManagement from './Admin/ClientManagement';
+
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<LoginPage />} />
+          <Route path="/ClientManagement" element={<Login />} />
           <Route path="/client-register" element={<ClientRegister />} />
           <Route path="/Company-register" element={<CompanyRegister />} />
           <Route path="/register-category" element={<RegistrationCategory/>} />
+          <Route path="/admin-dashboard" element={<AdminSideBar />} />
+          <Route path="/" element={<ClientManagement />} />
         </Routes>
       </div>
     </Router>
