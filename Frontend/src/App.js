@@ -8,6 +8,7 @@ import Login from './test/testlogin';
 import LoginPage from './auth/login';
 import AdminSideBar from './Admin/Sidebar';
 import ClientManagement from './Admin/ClientManagement';
+import CompanyManagement from './Admin/CompanyManagement';
 
 
 function App() {
@@ -20,7 +21,8 @@ function App() {
           <Route path="/Company-register" element={<CompanyRegister />} />
           <Route path="/register-category" element={<RegistrationCategory/>} />
           <Route path="/admin-dashboard" element={<AdminSideBar />} />
-          <Route path="/" element={<ClientManagement />} />
+          <Route path="/Client" element={<ClientManagement />} />
+          <Route path="/" element={<CompanyManagement/>} />
         </Routes>
       </div>
     </Router>
