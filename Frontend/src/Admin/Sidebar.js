@@ -27,7 +27,7 @@ const AdminSidebar = ({ onCollapseChange }) => {
     setActiveItem(item);
     switch(item) {
       case "Dashboard":
-        navigate('/admin/dashboard');
+        navigate('/client-management');
         break;
       case "User Management":
         navigate('/admin/user-management');

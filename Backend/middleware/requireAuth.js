@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Client = require("../models/Client");
 const Company = require("../models/Company");
+const Admin = require("../models/Admin");
 
 const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -12,8 +13,13 @@ const requireAuth = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Try to find user in Client model first
-    let user = await Client.findById(decoded.id).select("-password");
+    // Check Admin first
+    let user = await Admin.findById(decoded.id).select("-password");
+    
+    // If not found in Admin, check Client model
+    if (!user) {
+      user = await Client.findById(decoded.id).select("-password");
+    }
     
     // If not found in Client, check Company model
     if (!user) {
@@ -24,7 +30,8 @@ const requireAuth = async (req, res, next) => {
       return res.status(401).json({ message: "User not found" });
     }
 
-    if (!user.isApproved) {
+    // Skip approval check for admins
+    if (user.role !== 'admin' && !user.isApproved) {
       return res.status(403).json({ message: "Account not approved by admin" });
     }
 

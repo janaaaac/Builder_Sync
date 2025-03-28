@@ -10,8 +10,14 @@ const adminRouter = require("./routes/adminRoutes");
 const authRouter = require("./routes/authRoutes");
 const app = express();
 app.use(express.json());
-app.use(cors());
 
+
+app.use(cors({
+  origin: 'http://localhost:3000', // Frontend URL
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 connectDB();
 
 // In server.js

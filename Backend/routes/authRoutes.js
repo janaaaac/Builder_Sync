@@ -1,5 +1,5 @@
 const express = require("express");
-const { login, registerAdmin } = require("../controllers/authController");
+const { login, registerAdmin, verifyToken } = require("../controllers/authController");
 
 const router = express.Router();
 
@@ -7,6 +7,9 @@ const router = express.Router();
 router.post("/login", login);
 
 // Admin Registration (For initial setup)
-router.post("/admin/register", registerAdmin);
+router.post("/register", registerAdmin); // Simplified route path
+
+// Token verification endpoint
+router.get("/verify", verifyToken);
 
 module.exports = router;

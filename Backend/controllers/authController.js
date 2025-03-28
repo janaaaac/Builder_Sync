@@ -72,4 +72,17 @@ const registerAdmin = async (req, res) => {
   }
 };
 
-module.exports = { login, registerAdmin };
+// Verify token validity
+const verifyToken = async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ valid: false });
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({ valid: true, user: decoded });
+  } catch (error) {
+    res.status(401).json({ valid: false });
+  }
+};
+
+module.exports = { login, registerAdmin, verifyToken };

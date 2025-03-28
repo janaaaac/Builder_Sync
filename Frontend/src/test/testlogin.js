@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const LoginTest = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -13,42 +13,28 @@ const Login = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
-
+  
     try {
       const response = await axios.post("http://localhost:5001/api/auth/login", {
         email,
         password,
       });
-
+  
       console.log("Login Success:", response.data);
-      console.log("Role:", response.data.user.role);
-
-      // Store token in local storage
+      
+      // Store both token and full user data
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.user.role);
-
-      // Add a delay before navigation
-      setTimeout(() => {
-        // Try multiple navigation approaches
-        console.log("Attempting navigation to admin dashboard");
-        
-        if (response.data.user.role === "admin") {
-          // Approach 1: Direct navigation
-          navigate("/admin-dashboard");
-          
-          // Approach 2: Fallback to window.location if navigate doesn't work
-          setTimeout(() => {
-            if (window.location.pathname !== "/admin-dashboard") {
-              console.log("Fallback to window.location");
-              window.location.href = "/admin-dashboard";
-            }
-          }, 300);
-        } else if (response.data.user.role === "client") {
-          navigate("/client-dashboard");
-        } else if (response.data.user.role === "company") {
-          navigate("/company-dashboard");
-        }
-      }, 500); // Longer delay to ensure state updates complete
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      
+      // Immediate navigation without delay
+      if (response.data.user.role === "admin") {
+        navigate("/client-management", { replace: true });
+      } else if (response.data.user.role === "client") {
+        navigate("/client-dashboard", { replace: true });
+      } else if (response.data.user.role === "company") {
+        navigate("/company-dashboard", { replace: true });
+      }
+  
     } catch (err) {
       console.error("Login error:", err);
       setError(err.response?.data?.message || "Login failed!");
@@ -115,4 +101,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginTest;

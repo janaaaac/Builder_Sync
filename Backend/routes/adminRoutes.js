@@ -1,40 +1,45 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
-const requireAuth = require("../middleware/requireAuth"); // Ensure admin is authenticated
-const requireRole = require("../middleware/requireRole"); // Ensure only admin can access
+const requireAuth = require("../middleware/requireAuth");
+const requireRole = require("../middleware/requireRole");
 
-router.post("/admin/register", async (req, res) => {
-    try {
-      const { username, email, password } = req.body;
-  
-      // Check if admin already exists
-      const existingAdmin = await Admin.findOne({ email });
-      if (existingAdmin) {
-        return res.status(400).json({ message: "Admin already exists" });
-      }
-  
-      // Create new admin
-      const admin = new Admin({ username, email, password });
-      await admin.save();
-  
-      res.status(201).json({ message: "Admin registered successfully" });
-    } catch (error) {
-      console.error("Admin Registration Error:", error);
-      res.status(500).json({ message: "Server Error" });
+// Admin registration (initial setup only)
+router.post("/register", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ message: "Admin already exists" });
     }
-  });
-  
+    const admin = new Admin({ username, email, password });
+    await admin.save();
+    res.status(201).json({ message: "Admin registered successfully" });
+  } catch (error) {
+    console.error("Admin Registration Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 
-// Middleware to ensure only admin can approve/reject
-const isAdmin = requireRole("admin");
+// Apply auth middleware to all following routes
+router.use(requireAuth);
+router.use(requireRole("admin"));
 
-// Approve or Reject Clients
-router.put("/clients/approve/:id", requireAuth, isAdmin, adminController.approveClient);
-router.delete("/clients/reject/:id", requireAuth, isAdmin, adminController.rejectClient);
+// Client Management
+router.patch("/clients/:id/approve", adminController.approveClient);
+router.patch("/clients/:id/reject", adminController.rejectClient);
+router.get("/clients", adminController.getAllClients);
+router.get("/clients/pending", adminController.getPendingClients);
+router.get("/clients/:id", adminController.getClientDetails);
 
-// Approve or Reject Companies
-router.put("/companies/approve/:id", requireAuth, isAdmin, adminController.approveCompany);
-router.delete("/companies/reject/:id", requireAuth, isAdmin, adminController.rejectCompany);
+// Company Management
+router.patch("/companies/:id/approve", adminController.approveCompany);
+router.delete("/companies/:id/reject", adminController.rejectCompany);
+router.get("/companies/pending", adminController.getPendingCompanies);
+router.get("/companies/:id", adminController.getCompanyDetails);
+
+// Dashboard
+router.get("/dashboard/stats", adminController.getDashboardStats);
+router.get("/dashboard/activities", adminController.getRecentActivities);
 
 module.exports = router;
