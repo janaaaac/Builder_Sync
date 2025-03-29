@@ -28,9 +28,9 @@ const LoginTest = () => {
       
       // Immediate navigation without delay
       if (response.data.user.role === "admin") {
-        navigate("/client-management", { replace: true });
+        navigate("/landing", { replace: true });
       } else if (response.data.user.role === "client") {
-        navigate("/client-dashboard", { replace: true });
+        navigate("/company-management", { replace: true });
       } else if (response.data.user.role === "company") {
         navigate("/company-dashboard", { replace: true });
       }

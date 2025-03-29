@@ -111,17 +111,30 @@ const TestClientManagement = () => {
     }
   };
 
-  // Fetch client details
-  const fetchClientDetails = async (clientId) => {
-    try {
-      const response = await api.get(`/clients/${clientId}`);
-      return response.data;
-    } catch (error) {
-      toast.error('Failed to fetch client details');
-      console.error('Error fetching client details:', error);
-      throw error;
-    }
-  };
+  // Update the fetchClientDetails function to handle images properly
+
+const fetchClientDetails = async (clientId) => {
+  try {
+    setLoading(true);
+    const response = await api.get(`/clients/${clientId}`);
+    
+    // Backend should now return presigned URLs directly
+    const clientData = {
+      ...response.data,
+      // Set default images only if no URL is returned by the backend
+      profilePicture: response.data.profilePicture || null,
+      nicPassportFile: response.data.nicPassportFile || null
+    };
+    
+    return clientData;
+  } catch (error) {
+    toast.error('Failed to fetch client details');
+    console.error('Error fetching client details:', error);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
 
   // View client details
   const viewClientDetails = async (client) => {
@@ -215,7 +228,6 @@ const TestClientManagement = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -226,7 +238,6 @@ const TestClientManagement = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{client.username}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{client.fullName}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{client.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{client.companyName || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                             ${client.isApproved ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
@@ -292,6 +303,11 @@ const TestClientManagement = () => {
                         src={currentClient.profilePicture} 
                         alt="Profile" 
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.log("Profile image error, using default image");
+                          e.target.onerror = null; // Prevent infinite loop
+                          e.target.src = '/default-avatar.png'; // Use a default image
+                        }}
                       />
                     ) : (
                       <div className="w-full h-full bg-[#EA540C]/10 flex items-center justify-center">
@@ -402,11 +418,26 @@ const TestClientManagement = () => {
                   </h4>
                   <div className="mt-4 flex justify-center">
                     {currentClient.nicPassportFile ? (
-                      <img 
-                        src={currentClient.nicPassportFile} 
-                        alt="NIC/Passport" 
-                        className="max-h-64 rounded-lg shadow-md object-contain border border-gray-200"
-                      />
+                      <div className="w-full flex flex-col items-center">
+                        <img 
+                          src={currentClient.nicPassportFile} 
+                          alt="NIC/Passport" 
+                          className="max-h-64 rounded-lg shadow-md object-contain border border-gray-200"
+                          onError={(e) => {
+                            console.log("Document image error, using fallback");
+                            e.target.onerror = null; // Prevent infinite loop
+                            e.target.src = '/document-placeholder.png';
+                          }}
+                        />
+                        <a 
+                          href={currentClient.nicPassportFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-4 flex items-center px-4 py-2 bg-[#EA540C] text-white rounded-md hover:bg-[#c64509] transition-colors"
+                        >
+                          View Full Document
+                        </a>
+                      </div>
                     ) : (
                       <div className="w-full text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
                         <svg 

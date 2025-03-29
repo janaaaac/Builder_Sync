@@ -3,7 +3,6 @@ const connectDB = require("./config/db");
 const cors = require("cors");
 require("dotenv").config();
 
-
 const clientRouter = require("./routes/ClientRoutes");
 const companyRouter = require("./routes/companyRoutes");
 const adminRouter = require("./routes/adminRoutes");
@@ -31,6 +30,8 @@ app.use("/api/clients", clientRouter);
 app.use("/api/companies", companyRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
+
+
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {

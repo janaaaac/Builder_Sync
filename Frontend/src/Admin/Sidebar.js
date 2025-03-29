@@ -8,6 +8,8 @@ import {
   Chart,
   Setting2,
 } from "iconsax-react";
+// Import the admin logo
+import AdminLogo from "../Assets/AdminLogo.jpeg";
 
 const AdminSidebar = ({ onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -109,8 +111,8 @@ const AdminSidebar = ({ onCollapseChange }) => {
         <div className="flex items-center gap-4 mt-8">
           <div className="w-12 h-12 rounded-full bg-[#FFEEE8] flex items-center justify-center">
             <img
-              src="https://via.placeholder.com/50"
-              alt="Profile"
+              src={AdminLogo}
+              alt="Admin Logo"
               className="w-10 h-10 rounded-full object-cover"
             />
           </div>

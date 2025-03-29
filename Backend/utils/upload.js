@@ -15,19 +15,16 @@ const upload = multer({
   storage: multerS3({
     s3: s3Client,
     bucket: process.env.AWS_BUCKET_NAME,
-    acl: 'public-read', // Add this line
+    // acl: 'public-read', // Add this line
     contentType: multerS3.AUTO_CONTENT_TYPE,
     metadata: (req, file, cb) => {
       cb(null, { fieldName: file.fieldname });
     },
     key: (req, file, cb) => {
-      let folder = "general/";
-      if (file.fieldname === "profilePicture") folder = "profile-pictures/";
-      else if (file.fieldname === "nicPassportFile") folder = "nic-passports/";
-      
-      const uniqueName = `${folder}${Date.now()}-${file.originalname}`;
-      cb(null, uniqueName);
-    },
+      const folder = file.fieldname === "profilePicture" ? "profile-pictures/" : "nic-passports/";
+      const key = `${folder}${Date.now()}-${file.originalname}`;
+      cb(null, key);
+    }
   }),
   fileFilter: (req, file, cb) => {
     if (

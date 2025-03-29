@@ -33,6 +33,7 @@ router.get("/clients/pending", adminController.getPendingClients);
 router.get("/clients/:id", adminController.getClientDetails);
 
 // Company Management
+router.get("/companies", adminController.getCompanies); // ADD THIS LINE
 router.patch("/companies/:id/approve", adminController.approveCompany);
 router.delete("/companies/:id/reject", adminController.rejectCompany);
 router.get("/companies/pending", adminController.getPendingCompanies);
