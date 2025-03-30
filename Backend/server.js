@@ -8,6 +8,7 @@ const companyRouter = require("./routes/companyRoutes");
 const adminRouter = require("./routes/adminRoutes");
 const authRouter = require("./routes/authRoutes");
 const utilRoutes = require('./routes/utilRoutes');
+const staffRouter = require("./routes/staffRoutes");
 const app = express();
 app.use(express.json());
 
@@ -33,6 +34,7 @@ app.use("/api/companies", companyRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
 app.use('/api/utils', utilRoutes);
+app.use("/api/staff", staffRouter);
 
 
 

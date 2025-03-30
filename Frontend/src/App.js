@@ -25,19 +25,21 @@ import ClientSettings from './client/clientProfile';
 import ClientSidebar from './client/clientSidebar';
 import CompanySidebar from './company/CompanySideBar';
 import CompanySettings from './company/CompanyProfile';
+import CreateStaffForm from './company/staff';
+import FirstLoginSetup from './auth/FirstLoginStaff';
+import StaffSidebar from './Staff/staffSideBar';
+import StaffDashboard from './Staff/StaffDashboard';
 // Fix: Correct the import or create a placeholder component
 // Option 1: Fix the import path if the file exists elsewhere
 // import ClientSidebar from './client/Sidebar'; 
 
-// Option 2: Create a temporary placeholder component
-const ClientDashboard = () => <div>Client Dashboard - Under Construction</div>;
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/jana" element={<LandingPage />} />
         <Route path="/register-category" element={<RegistrationCategory />} />
 
         {/* Auth routes */}
@@ -61,6 +63,9 @@ function App() {
         {/* Company routes */}
         <Route path="/company-dashboard" element={<CompanySidebar />} />
         <Route path="/company-profile" element={<CompanySettings />} />
+        <Route path="/staff-management" element={<CreateStaffForm />} />
+        <Route path="/first-login" element={<FirstLoginSetup />} />
+        <Route path="/staff-dashboard" element={<StaffDashboard />} />
 
         {/* Add a catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />

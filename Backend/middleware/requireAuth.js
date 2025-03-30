@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const Client = require("../models/Client");
 const Company = require("../models/Company");
 const Admin = require("../models/Admin");
+const Staff = require("../models/Staff"); // Add this line
 
 const requireAuth = async (req, res, next) => {
   // Extract token with improved logging
@@ -34,6 +35,7 @@ const requireAuth = async (req, res, next) => {
       case 'admin': Model = Admin; break;
       case 'client': Model = Client; break;
       case 'company': Model = Company; break;
+      case 'staff': Model = Staff; break;  // Add this line
       default: throw new Error('Invalid role');
     }
 

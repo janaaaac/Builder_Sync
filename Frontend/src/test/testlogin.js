@@ -18,6 +18,7 @@ const LoginTest = () => {
     setLoading(true);
 
     try {
+      console.log("Starting login request to:", `${API_URL}/api/auth/login`);
       const response = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password,
@@ -25,25 +26,54 @@ const LoginTest = () => {
 
       console.log("Login Success:", response.data);
       
+      // Store authentication data in local storage
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
+      
+      // Debug: Check what we're getting from API
+      console.log("User role:", response.data.user.role);
+      console.log("isFirstLogin flag:", response.data.user.isFirstLogin);
 
-      // Check approval status before navigation
+      // Check if this is a staff member by checking for company association or staffRole
+      const isStaffMember = response.data.user.company || response.data.token.includes("staffRole");
+
+      // STEP 1: Handle special account states
       if (response.data.user.role === "company" && !response.data.user.isApproved) {
+        console.log("Company not approved - redirecting to pending-approval");
         navigate('/pending-approval', { replace: true });
         return;
       }
 
-      // Regular navigation
-      const dashboardPaths = {
-        admin: "/admin-dashboard",
-        client: "/client-dashboard",
-        company: "/company-dashboard"
+      // STEP 2: Handle staff onboarding
+      // Check if staff member needs to complete first-time setup
+      if (isStaffMember && response.data.user.isFirstLogin) {
+        console.log("Staff first login detected - redirecting to /first-login");
+        navigate('/first-login', { replace: true });
+        return;
+      }
+
+      // STEP 3: Route to appropriate dashboard
+      const getDashboardPath = (user) => {
+        if (user.role === "admin") return "/admin-dashboard";
+        if (user.role === "client") return "/client-dashboard";
+        if (user.role === "company") return "/company-dashboard";
+        if (isStaffMember) return "/staff-dashboard"; // Any staff role goes to staff dashboard
+        return "/";
       };
-      navigate(dashboardPaths[response.data.user.role] || "/", { replace: true });
+
+      const targetPath = getDashboardPath(response.data.user);
+      console.log(`Normal flow - redirecting to ${targetPath} for ${response.data.user.role} role`);
+      navigate(targetPath, { replace: true });
 
     } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
+      console.error("Login error details:", err);
+      if (err.response) {
+        console.error("Server response:", err.response.status, err.response.data);
+      } else if (err.request) {
+        console.error("No response received from server");
+      } else {
+        console.error("Error setting up request:", err.message);
+      }
       setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
