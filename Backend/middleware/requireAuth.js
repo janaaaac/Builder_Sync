@@ -1,44 +1,82 @@
+// requireAuth.js
 const jwt = require("jsonwebtoken");
 const Client = require("../models/Client");
 const Company = require("../models/Company");
 const Admin = require("../models/Admin");
 
 const requireAuth = async (req, res, next) => {
+  // Extract token with improved logging
+  console.log("Auth check for path:", req.path);
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized - No token provided" });
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log("Missing or invalid Authorization header");
+    return res.status(401).json({ 
+      success: false,
+      message: 'Authorization token required' 
+    });
   }
 
+  const token = authHeader.split(' ')[1];
+  console.log("Incoming token:", token ? `${token.substring(0, 15)}...` : "missing");
+  
   try {
-    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Decoded token:", {
+      id: decoded.id,
+      role: decoded.role,
+      isApproved: decoded.isApproved,
+      exp: new Date(decoded.exp * 1000).toISOString()
+    });
     
-    // Check Admin first
-    let user = await Admin.findById(decoded.id).select("-password");
-    
-    // If not found in Admin, check Client model
-    if (!user) {
-      user = await Client.findById(decoded.id).select("-password");
-    }
-    
-    // If not found in Client, check Company model
-    if (!user) {
-      user = await Company.findById(decoded.id).select("-password");
+    // Role-specific model selection
+    let Model;
+    switch(decoded.role) {
+      case 'admin': Model = Admin; break;
+      case 'client': Model = Client; break;
+      case 'company': Model = Company; break;
+      default: throw new Error('Invalid role');
     }
 
+    const user = await Model.findById(decoded.id).select('-password');
     if (!user) {
-      return res.status(401).json({ message: "User not found" });
+      console.log(`User not found: ${decoded.id} (${decoded.role})`);
+      throw new Error('User not found');
     }
 
-    // Skip approval check for admins
-    if (user.role !== 'admin' && !user.isApproved) {
-      return res.status(403).json({ message: "Account not approved by admin" });
+    console.log("User found:", {
+      id: user._id,
+      role: decoded.role,
+      isApproved: user.isApproved || decoded.role === 'admin'
+    });
+
+    // Verify approval status matches token
+    if (decoded.isApproved !== (user.isApproved || decoded.role === 'admin')) {
+      console.log("Approval status mismatch:", {
+        tokenApproval: decoded.isApproved,
+        dbApproval: user.isApproved || decoded.role === 'admin'
+      });
+      throw new Error('Approval status mismatch');
     }
 
+    // Attach user to request
     req.user = user;
+    // Also attach role and token info for convenience
+    req.user.role = decoded.role;
+    req.tokenData = {
+      id: decoded.id,
+      role: decoded.role,
+      isApproved: decoded.isApproved,
+      exp: decoded.exp
+    };
+    
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
+    console.error('Authentication error:', error.message);
+    res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token',
+      error: error.message
+    });
   }
 };
 

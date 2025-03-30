@@ -23,6 +23,8 @@ import CompanyManagement from './Admin/CompanyManagement';
 // Client imports
 import ClientSettings from './client/clientProfile';
 import ClientSidebar from './client/clientSidebar';
+import CompanySidebar from './company/CompanySideBar';
+import CompanySettings from './company/CompanyProfile';
 // Fix: Correct the import or create a placeholder component
 // Option 1: Fix the import path if the file exists elsewhere
 // import ClientSidebar from './client/Sidebar'; 
@@ -55,6 +57,10 @@ function App() {
         {/* Client routes */}
         <Route path="/client-dashboard" element={<ClientSidebar />} />
         <Route path="/client-profile" element={<ClientSettings />} />
+
+        {/* Company routes */}
+        <Route path="/company-dashboard" element={<CompanySidebar />} />
+        <Route path="/company-profile" element={<CompanySettings />} />
 
         {/* Add a catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />

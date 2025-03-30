@@ -91,6 +91,83 @@ exports.getCompanyById = async (req, res) => {
   }
 };
 
+// Add this to your companyController.js
+exports.getCompanyProfile = async (req, res) => {
+  try {
+    // Company is already attached to req.user by requireAuth
+    const company = req.user;
+
+    // Ensure we're dealing with a company
+    if (company.role !== 'company') {
+      return res.status(403).json({ 
+        success: false,
+        message: "Company access only" 
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: company._id,
+        username: company.username,
+        email: company.email,
+        companyName: company.companyName,
+        contactPersonName: company.contactPersonName,
+        contactPhoneNumber: company.contactPhoneNumber,
+        registeredOfficeAddress: company.registeredOfficeAddress,
+        websiteURL: company.websiteURL,
+        companyLogo: company.companyLogo,
+        isApproved: company.isApproved
+      }
+    });
+  } catch (error) {
+    console.error("Profile Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch company profile"
+    });
+  }
+};
+
+/// Update this method in companyController.js
+exports.updateCompanyProfile = async (req, res) => {
+  try {
+    const company = req.user;
+    const updates = req.body;
+
+    // Filter allowed fields to update
+    const allowedUpdates = [
+      'username',
+      'email',
+      'companyName',
+      'contactPersonName',
+      'contactPhoneNumber',
+      'registeredOfficeAddress',
+      'websiteURL'
+    ];
+
+    // Apply updates
+    allowedUpdates.forEach(field => {
+      if (updates[field] !== undefined) {
+        company[field] = updates[field];
+      }
+    });
+
+    await company.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: company
+    });
+  } catch (error) {
+    console.error("Update Error:", error);
+    res.status(400).json({
+      success: false,
+      message: "Failed to update profile"
+    });
+  }
+};
 // Delete a company
 exports.deleteCompany = async (req, res) => {
   try {
@@ -104,3 +181,4 @@ exports.deleteCompany = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+

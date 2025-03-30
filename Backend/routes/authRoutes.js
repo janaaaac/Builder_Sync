@@ -12,6 +12,8 @@ router.post("/register", registerAdmin); // Simplified route path
 // Token verification endpoint
 router.get("/verify", verifyToken);
 
-// router.post('/create', uploadFields, clientController.createClient);
+router.get('/verify-token', verifyToken);
+
+
 
 module.exports = router;

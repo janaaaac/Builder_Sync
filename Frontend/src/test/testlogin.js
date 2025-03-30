@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+// API URL configuration
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5001";
+
 const LoginTest = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,31 +16,35 @@ const LoginTest = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
-  
+
     try {
-      const response = await axios.post("http://localhost:5001/api/auth/login", {
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password,
       });
-  
+
       console.log("Login Success:", response.data);
       
-      // Store both token and full user data
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      
-      // Immediate navigation without delay
-      if (response.data.user.role === "admin") {
-        navigate("/admin-dashboard", { replace: true });
-      } else if (response.data.user.role === "client") {
-        navigate("/client-dashboard", { replace: true });
-      } else if (response.data.user.role === "company") {
-        navigate("/company-dashboard", { replace: true });
+
+      // Check approval status before navigation
+      if (response.data.user.role === "company" && !response.data.user.isApproved) {
+        navigate('/pending-approval', { replace: true });
+        return;
       }
-  
+
+      // Regular navigation
+      const dashboardPaths = {
+        admin: "/admin-dashboard",
+        client: "/client-dashboard",
+        company: "/company-dashboard"
+      };
+      navigate(dashboardPaths[response.data.user.role] || "/", { replace: true });
+
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.response?.data?.message || "Login failed!");
+      console.error("Login error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
