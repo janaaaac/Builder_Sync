@@ -10,6 +10,7 @@ import {
 } from "iconsax-react";
 // Import the admin logo
 import AdminLogo from "../Assets/AdminLogo.jpeg";
+import { Building2 } from "lucide-react";
 
 const AdminSidebar = ({ onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -29,22 +30,22 @@ const AdminSidebar = ({ onCollapseChange }) => {
     setActiveItem(item);
     switch(item) {
       case "Dashboard":
-        navigate('/client-management');
+        navigate('/admin-dashboard');
         break;
-      case "User Management":
-        navigate('/admin/user-management');
+      case "Client Management":
+        navigate('/client-management'); // Updated to match the route in App.js
         break;
       case "Company Management":
-        navigate('/admin/company-management');
+        navigate('/company-management'); // Updated to match the route in App.js
         break;
       case "Projects":
-        navigate('/admin/projects');
+        navigate('/projects'); // Adjust if needed based on your actual route
         break;
       case "Analytics":
-        navigate('/admin/analytics');
+        navigate('/analytics'); // Adjust if needed based on your actual route
         break;
       case "Settings":
-        navigate('/admin/settings');
+        navigate('/settings'); // Adjust if needed based on your actual route
         break;
       default:
         break;
@@ -141,8 +142,8 @@ const AdminSidebar = ({ onCollapseChange }) => {
         <ul className="space-y-1">
           {[
              { name: "Dashboard", icon: Category },
-             { name: "User Management", icon: People },
-             { name: "Company Management", icon: Profile2User },
+             { name: "Client Management", icon: People },
+             { name: "Company Management", icon: Building2 },
              { name: "Projects", icon: Note },
              { name: "Analytics", icon: Chart },
              { name: "Settings", icon: Setting2 },

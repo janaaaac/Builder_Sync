@@ -14,12 +14,12 @@ const RegistrationCategory = () => {
 
   const handleStakeholderRegistration = () => {
     // Navigate to client registration page
-    navigate('/client-register');
+    navigate('/client-registration');
   };
 
   const handleCompanyRegistration = () => {
     // Navigate to company registration page
-    navigate('/Company-register');
+    navigate('/company-registration');
   };
 
   const handleBack = () => {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   User, 
   Lock, 
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [loginType, setLoginType] = useState('email');
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,6 +22,11 @@ const LoginPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Add this function to handle navigation
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -228,12 +235,13 @@ const LoginPage = () => {
               />
               <label htmlFor="remember" className="text-[#737373]">Remember me</label>
             </div>
-            <a 
-              href="#" 
+            <button 
+              type="button"
+              onClick={() => handleNavigation('/forgot-password')}
               className="text-[#EA540C] hover:text-[#EA540C]/80 transition-colors text-sm"
             >
               Forgot Password?
-            </a>
+            </button>
           </div>
 
           {/* Submit Button */}
