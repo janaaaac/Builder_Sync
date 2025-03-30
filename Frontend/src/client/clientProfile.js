@@ -4,6 +4,68 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// API configuration
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5001";
+
+// Client API service
+const clientAPI = {
+  getProfile: async () => {
+    const token = localStorage.getItem("token");
+    return axios.get(`${API_URL}/api/clients/profile`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+  
+  updateProfile: async (profileData) => {
+    const token = localStorage.getItem("token");
+    return axios.put(`${API_URL}/api/clients/profile`, profileData, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+  },
+  
+  updatePassword: async (passwordData) => {
+    const token = localStorage.getItem("token");
+    return axios.put(`${API_URL}/api/clients/profile/password`, passwordData, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+  },
+
+  uploadProfilePicture: async (file) => {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    
+    // Change to match expected field from multer configuration
+    formData.append('profilePicture', file);
+    
+    console.log("Uploading file:", file.name, "Size:", file.size);
+    
+    return axios.post(`${API_URL}/api/clients/profile/upload-photo`, formData, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        // Remove the Content-Type header to let axios set it with boundary
+        // 'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  
+  updateNotifications: async (notificationSettings) => {
+    // You may need to implement this endpoint on the backend
+    const token = localStorage.getItem("token");
+    return axios.put(`${API_URL}/api/clients/profile/notifications`, notificationSettings, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+};
+
 export default function ClientSettings() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('account');
@@ -57,38 +119,38 @@ export default function ClientSettings() {
     const fetchClientProfile = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          toast.error("Authentication error. Please log in again.");
-          return;
+        console.log("Attempting to connect to API at:", API_URL);
+        const response = await clientAPI.getProfile();
+        console.log("Profile API response:", response);
+        
+        // The data is nested inside 'data' according to your backend controller
+        const responseData = response.data;
+        
+        if (responseData.success && responseData.data) {
+          // Use the nested data structure from your backend
+          setClientData({
+            fullName: responseData.data.fullName || '',
+            email: responseData.data.email || '',
+            address: responseData.data.address || '', 
+            contactNumber: responseData.data.primaryContact || '', // Map primaryContact to contactNumber
+            profilePicture: responseData.data.profilePicture || null
+          });
+        } else {
+          console.warn("Unexpected API response structure:", responseData);
+          toast.warning("Received unexpected data format from server");
         }
-
-        const response = await axios.get(
-          "http://localhost:5002/api/clients/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        console.log("Profile data received:", response.data);
-        
-        // Extract data correctly from the API response
-        const data = response.data;
-        
-        setClientData({
-          fullName: data.profileInfo?.fullName || '',
-          email: data.profileInfo?.email || '',
-          // Address is at the top level, not in profileInfo
-          address: data.address || '', 
-          contactNumber: data.profileInfo?.contactNumber || '',
-          profilePicture: data.profileInfo?.profilePicture || null
-        });
         
       } catch (error) {
         console.error("Error fetching client profile:", error);
-        toast.error("Failed to load your profile information.");
+        
+        if (error.code === 'ERR_NETWORK') {
+          toast.error(`Cannot connect to server at ${API_URL}. Please check if the server is running.`);
+        } else if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          toast.error("Session expired. Please login again.");
+        } else {
+          toast.error("Failed to load your profile information.");
+        }
       } finally {
         setLoading(false);
       }
@@ -121,22 +183,34 @@ export default function ClientSettings() {
     }
   };
 
-  const handleProfileImageUpload = (e) => {
+  const handleProfileImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.warning("Image is too large. Maximum size is 2MB.");
-        return;
-      }
+    if (!file) return;
+    
+    if (file.size > 2 * 1024 * 1024) {
+      toast.warning("Image is too large. Maximum size is 2MB.");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      console.log("Uploading file:", file.name, "Size:", file.size);
       
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setClientData(prev => ({
-          ...prev,
-          profilePicture: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
+      const response = await clientAPI.uploadProfilePicture(file);
+      
+      // Update client data with the new profile picture URL from response
+      setClientData(prev => ({
+        ...prev,
+        profilePicture: response.data.profilePictureUrl
+      }));
+      
+      toast.success("Profile picture updated successfully!");
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      toast.error("Failed to upload profile picture.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -150,27 +224,42 @@ export default function ClientSettings() {
   const handleUpdateProfile = async () => {
     setLoading(true);
     try {
+      // Map frontend fields to backend expected structure
+      const profileUpdateData = {
+        fullName: clientData.fullName,
+        email: clientData.email,
+        address: clientData.address,
+        primaryContact: clientData.contactNumber // Map contactNumber to primaryContact
+      };
+      
       const token = localStorage.getItem("token");
       if (!token) {
         toast.error("Authentication error. Please log in again.");
         return;
       }
-
-      const response = await axios.put(
-        "http://localhost:5002/api/clients/profile",
-        clientData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
+  
+      // Since your API route is expecting a client ID, we need to get it first
+      const profileResponse = await axios.get(`${API_URL}/api/clients/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const clientId = profileResponse.data.data?._id;
+      if (!clientId) {
+        throw new Error("Could not retrieve client ID");
+      }
+      
+      // Use the ID to update the profile
+      await axios.put(`${API_URL}/api/clients/${clientId}`, profileUpdateData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      );
-
+      });
+      
       toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update your profile.");
+      toast.error(error.response?.data?.message || "Failed to update your profile.");
     } finally {
       setLoading(false);
     }
@@ -216,26 +305,10 @@ export default function ClientSettings() {
     
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("Authentication error. Please log in again.");
-        return;
-      }
-
-      // Using the new endpoint we created
-      const response = await axios.put(
-        "http://localhost:5002/api/clients/profile/password",
-        {
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-        }
-      );
+      await clientAPI.updatePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
 
       toast.success("Password updated successfully!");
       // Clear password fields
@@ -280,18 +353,7 @@ export default function ClientSettings() {
     const fetchClientProfile = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        const response = await axios.get(
-          "http://localhost:5002/api/clients/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const response = await clientAPI.getProfile();
         const profileData = response.data.profileInfo || {};
         setClientData({
           fullName: profileData.fullName || '',
@@ -312,8 +374,17 @@ export default function ClientSettings() {
     fetchClientProfile();
   };
   
-  const handleSaveNotifications = () => {
-    toast.success("Notification preferences saved successfully!");
+  const handleSaveNotifications = async () => {
+    setLoading(true);
+    try {
+      await clientAPI.updateNotifications({ notifications });
+      toast.success("Notification preferences saved successfully!");
+    } catch (error) {
+      console.error("Error saving notification preferences:", error);
+      toast.error("Failed to save notification preferences.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

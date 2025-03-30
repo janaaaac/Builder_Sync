@@ -87,33 +87,54 @@ exports.getClientById = async (req, res) => {
 
 exports.getClientProfile = async (req, res) => {
   try {
-    console.log("Fetching profile for user ID:", req.user.id); // Add this line
+    // Check if req.user exists before attempting to access properties
+    if (!req.user) {
+      console.error("Auth middleware failure: req.user is undefined");
+      return res.status(401).json({ 
+        message: "Authentication failed. Please login again.",
+        error: "NO_USER_IN_REQUEST"
+      });
+    }
+
+    console.log("Fetching profile for user ID:", req.user.id);
     
     const client = await Client.findById(req.user.id).select('-password');
     
     if (!client) {
-      console.log("Client not found for ID:", req.user.id); // Add this line
+      console.log("Client not found for ID:", req.user.id);
       return res.status(404).json({ message: "Client not found" });
     }
 
-    console.log("Found client:", client); // Add this line
+    console.log("Found client:", client);
     
     res.status(200).json({
-      fullName: client.fullName,
-      email: client.email,
-      profilePicture: client.profilePicture,
-      username: client.username,
-      companyName: client.companyName
+      success: true,
+      data: {
+        _id: client._id,
+        fullName: client.fullName,
+        email: client.email,
+        // Add the full URL to the profile picture if it's not an absolute URL
+        profilePicture: client.profilePicture?.startsWith('http') 
+          ? client.profilePicture 
+          : `${req.protocol}://${req.get('host')}/${client.profilePicture}`,
+        username: client.username,
+        companyName: client.companyName || "",
+        clientType: client.clientType || "individual",
+        primaryContact: client.primaryContact || "",
+        address: client.address || "",
+        preferredCommunication: client.preferredCommunication || "email"
+      }
     });
   } catch (error) {
     console.error("Detailed error:", {
       message: error.message,
       stack: error.stack,
       fullError: error
-    }); // Enhanced error logging
+    });
     res.status(500).json({ 
-      message: "Server error",
-      error: error.message // Send the actual error message to client
+      success: false,
+      message: "Server error retrieving profile",
+      error: error.message
     });
   }
 };
@@ -142,5 +163,131 @@ exports.deleteClient = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Update client profile
+exports.updateClientProfile = async (req, res) => {
+  try {
+    // Only allow specific fields to be updated
+    const { fullName, email, address, primaryContact } = req.body;
+    
+    // Find the client by ID from the authenticated user
+    const client = await Client.findById(req.user.id);
+    
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    
+    // Update only the provided fields
+    if (fullName) client.fullName = fullName;
+    if (email) client.email = email;
+    if (address) client.address = address;
+    if (primaryContact) client.primaryContact = primaryContact;
+    
+    await client.save();
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Profile updated successfully",
+      data: {
+        fullName: client.fullName,
+        email: client.email,
+        address: client.address,
+        primaryContact: client.primaryContact,
+        profilePicture: client.profilePicture
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error updating client profile:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+// Update client password
+exports.updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Both current and new password are required" 
+      });
+    }
+    
+    // Find the client by ID
+    const client = await Client.findById(req.user.id);
+    if (!client) {
+      return res.status(404).json({ success: false, message: "Client not found" });
+    }
+    
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, client.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Current password is incorrect" });
+    }
+    
+    // Validate new password
+    if (newPassword.length < 8) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "New password must be at least 8 characters long" 
+      });
+    }
+    
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    client.password = await bcrypt.hash(newPassword, salt);
+    
+    await client.save();
+    
+    res.status(200).json({ success: true, message: "Password updated successfully" });
+    
+  } catch (error) {
+    console.error("Error updating password:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+// Upload profile picture
+exports.uploadProfilePicture = async (req, res) => {
+  try {
+    console.log("Upload request received", { 
+      file: req.file, 
+      body: req.body
+    });
+    
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No profile picture file found in the request" 
+      });
+    }
+    
+    // With S3, multer-s3 will add a 'location' property to the file object with the S3 URL
+    const profilePictureUrl = req.file.location;
+    
+    // Update client with new profile picture
+    const client = await Client.findByIdAndUpdate(
+      req.user.id,
+      { profilePicture: profilePictureUrl },
+      { new: true }
+    );
+    
+    if (!client) {
+      return res.status(404).json({ success: false, message: "Client not found" });
+    }
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Profile picture uploaded successfully",
+      profilePictureUrl
+    });
+    
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
