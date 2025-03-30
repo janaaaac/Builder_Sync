@@ -3,11 +3,18 @@ const router = express.Router();
 const clientController = require('../controllers/clientController');
 const { uploadFields } = require('../utils/upload'); // Ensure this path is correct
 
+// const requireAuth = require('../middleware/requireAuth');
+// router.use(requireAuth);
+
 // Create a new client with file upload handling
 router.post('/create', uploadFields, clientController.createClient);
 
 // Get all clients
 router.get('/', clientController.getClients);
+
+
+// Get all profile clients
+router.get('/profile', clientController.getClientProfile);
 
 // Get a specific client by ID
 router.get('/:id', clientController.getClientById);

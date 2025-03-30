@@ -1,7 +1,11 @@
 const Client = require("../models/Client");
 const Company = require("../models/Company");
 const Admin = require("../models/Admin");
-const { generatePresignedUrl, generatePresignedUrlFromS3Url } = require("../utils/s3Presigner");
+const { 
+  generatePresignedUrl, 
+  generatePresignedUrlFromS3Url,
+  addPresignedUrlsToClient // Add this import
+} = require("../utils/s3Presigner");
 
 // Client Management
 exports.approveClient = async (req, res) => {
@@ -90,14 +94,32 @@ exports.getClientDetails = async (req, res) => {
   }
 };
 
-// Get all clients
+// Get all clients with file URL handling
 exports.getAllClients = async (req, res) => {
   try {
     const clients = await Client.find({})
       .sort({ createdAt: -1 })
       .select('-password');
     
-    res.status(200).json(clients);
+    // Process clients in parallel with better error handling
+    const clientsWithUrls = await Promise.all(
+      clients.map(async (client) => {
+        try {
+          // Convert Mongoose document to plain object before processing
+          const clientObj = client.toObject ? client.toObject() : {...client};
+          
+          // Add presigned URLs for all file fields
+          const processed = await addPresignedUrlsToClient(clientObj);
+          return processed;
+        } catch (error) {
+          console.error(`Error processing client ${client._id}:`, error);
+          // Return the original client as a fallback
+          return client.toObject ? client.toObject() : {...client};
+        }
+      })
+    );
+    
+    res.status(200).json(clientsWithUrls);
   } catch (error) {
     console.error("Error fetching clients:", error);
     res.status(500).json({ message: "Server error while fetching clients" });

@@ -3,61 +3,82 @@ import { useNavigate } from 'react-router-dom';
 import {
   Category,
   Note,
-  DollarSquare,
   People,
   Profile2User,
   ShoppingBag,
   Chart,
-  Folder,
-  StatusUp,
   Setting2,
   DocumentText,
 } from "iconsax-react";
 import axios from "axios";
+// Use a placeholder image as fallback
+import DefaultAvatar from "../Assets/default-avatar.png"; 
 
 const ClientSidebar = ({ onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState("Dashboard");
   const [clientData, setClientData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchClientProfile = async () => {
       try {
         const token = localStorage.getItem("token");
+        
         if (!token) {
-          console.error("No token found");
+          console.error("No authentication token found");
+          navigate('/login');
           return;
         }
-
-        const response = await axios.get(
-          "http://localhost:5002/api/clients/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        console.log("API Response:", response.data);
-        setClientData(response.data);
+        
+        const response = await axios.get("http://localhost:5001/api/clients/profile", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log("Profile API response:", response); // Log successful response
+        
+        setClientData({
+          fullName: response.data.fullName || "Client User",
+          email: response.data.email || "No email available",
+          profilePicture: response.data.profilePicture || DefaultAvatar,
+          username: response.data.username || "",
+          companyName: response.data.companyName || ""
+        });
+        
       } catch (error) {
-        console.error("Error fetching client profile:", error);
-        if (error.response) {
-          console.error("Status:", error.response.status);
-          console.error("Data:", error.response.data);
+        console.error("Detailed client profile error:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          config: error.config
+        });
+        
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          navigate('/login');
+          return;
         }
+        
+        // Set fallback data
+        setClientData({
+          fullName: "Client User",
+          email: "No email available",
+          profilePicture: DefaultAvatar
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchClientProfile();
-  }, []);
+  }, [navigate]);
 
   const toggleSidebar = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     
-    // Call the callback to notify parent component
     if (onCollapseChange) {
       onCollapseChange(newState);
     }
@@ -65,24 +86,30 @@ const ClientSidebar = ({ onCollapseChange }) => {
 
   const handleMenuClick = (item) => {
     setActiveItem(item);
-    if (item === "Dashboard") {
-      navigate('/all-companys');
+    switch(item) {
+      case "Dashboard":
+        navigate('/client-dashboard');
+        break;
+      case "Projects":
+        navigate('/client-projects');
+        break;
+      case "Documents":
+        navigate('/client-documents');
+        break;
+      case "Settings":
+        navigate('/client-profile');
+        break;
+      default:
+        // For menu items still under development
+        navigate(`/client-${item.toLowerCase()}`);
+        break;
     }
-    if (item === "Projects") {
-      navigate('/client-projects');
-    }
-    if (item === "Documents") {
-      navigate('/client-documents');
-    }
-    if (item === "Settings") {
-      navigate('/client-settings');
-    }
-
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.location.href = "/login";
+    localStorage.removeItem("user");
+    navigate('/login');
   };
 
   return (
@@ -91,10 +118,11 @@ const ClientSidebar = ({ onCollapseChange }) => {
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
-       {/* Toggle Button */}
-       <button
+      {/* Toggle Button */}
+      <button
         className="absolute top-4 -right-4 w-8 h-8 bg-[#EA540C] text-white rounded-full flex items-center justify-center z-50"
         onClick={toggleSidebar}
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {isCollapsed ? (
           <svg
@@ -129,37 +157,50 @@ const ClientSidebar = ({ onCollapseChange }) => {
         )}
       </button>
 
-      {/* Updated Sidebar Header */}
+      {/* Sidebar Header */}
       <div className="p-6">
         {!isCollapsed && (
           <>
             <h1 className="text-2xl font-bold text-[#EA540C] mb-2 font-aclonica">BuilderSync</h1>
             <div className="h-px bg-gray-100 my-2"></div>
-            {/* <p className="text-sm text-gray-600 mb-6">
-              {clientData ? clientData.profileInfo?.fullName || "Client" : "Loading..."}
-            </p> */}
           </>
         )}
+        
+        {/* User Profile Section */}
         <div className="flex items-center gap-4 mt-8">
-          <div className="w-12 h-12 rounded-full bg-[#FFEEE8] flex items-center justify-center">
-            <img
-              src={clientData?.profileInfo?.profilePicture || "https://via.placeholder.com/50"}
-              alt="Profile"
-              className="w-10 h-10 rounded-full object-cover"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/50";
-              }}
-            />
+          <div className="w-12 h-12 rounded-full bg-[#FFEEE8] flex items-center justify-center overflow-hidden">
+            {loading ? (
+              <div className="w-full h-full animate-pulse bg-gray-200"></div>
+            ) : (
+              <img
+                src={clientData?.profilePicture || DefaultAvatar}
+                alt="Profile"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  e.target.src = DefaultAvatar;
+                }}
+              />
+            )}
           </div>
+          
           {!isCollapsed && (
             <div>
               <p className="text-xs text-[#9C9AA5] uppercase">CLIENT</p>
-              <p className="text-sm font-bold text-black">
-                {clientData ? clientData.profileInfo?.fullName || "Client" : "Loading..."}
-              </p>
-              <p className="text-xs text-gray-500">
-                {clientData?.profileInfo?.email || 'No email available'}
-              </p>
+              {loading ? (
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse my-1"></div>
+              ) : (
+                <p className="text-sm font-bold text-black truncate max-w-[120px]">
+                  {clientData?.fullName || "Client User"}
+                </p>
+              )}
+              {loading ? (
+                <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+              ) : (
+                <p className="text-xs text-gray-500 truncate max-w-[120px]">
+                  {clientData?.email || "No email available"}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -171,7 +212,7 @@ const ClientSidebar = ({ onCollapseChange }) => {
       {/* Menu Label */}
       {!isCollapsed && (
         <div className="px-6 py-2">
-          <p className="text-xs text-[#9C9AA5] uppercase font-medium">MAIN</p>
+          <p className="text-xs text-[#9C9AA5] uppercase font-medium">MAIN MENU</p>
         </div>
       )}
 
@@ -179,14 +220,10 @@ const ClientSidebar = ({ onCollapseChange }) => {
       <div className="px-4">
         <ul className="space-y-1">
           {[
-             { name: "Dashboard", icon: Category },
-             { name: "Projects", icon: Note },
-             { name: "Clients", icon: People },
-             { name: "Teams", icon: Profile2User },
-             { name: "Proposals", icon: DocumentText },
-             { name: "Materials", icon: ShoppingBag },
-             { name: "Analytics", icon: Chart },
-             { name: "Settings", icon: Setting2 },
+            { name: "Dashboard", icon: Category },
+            { name: "Projects", icon: Note },
+            { name: "Documents", icon: DocumentText },
+            { name: "Settings", icon: Setting2 },
           ].map((item) => (
             <li
               key={item.name}
@@ -220,6 +257,7 @@ const ClientSidebar = ({ onCollapseChange }) => {
         <button
           onClick={handleLogout}
           className="flex items-center text-red-600 hover:text-red-700 transition-colors duration-300"
+          aria-label="Logout"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -240,9 +278,6 @@ const ClientSidebar = ({ onCollapseChange }) => {
       </div>
     </div>
   );
-
 };
-
-
 
 export default ClientSidebar;

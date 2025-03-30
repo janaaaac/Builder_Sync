@@ -19,8 +19,8 @@ exports.createClient = async (req, res) => {
       } = req.body;
   
       // Get the S3 file URLs or file paths from the request (based on multer-s3 configuration)
-      const nicPassportFile = req.files['nicPassportFile'] ? req.files['nicPassportFile'][0].location : null; // URL of the file in S3
-      const profilePicture = req.files['profilePicture'] ? req.files['profilePicture'][0].location : null; // URL of the file in S3
+      const nicPassportFile = req.files['nicPassportFile'] ? req.files['nicPassportFile'][0].location : null;
+      const profilePicture = req.files['profilePicture'] ? req.files['profilePicture'][0].location : null;
   
       // Check if email or username already exists
       const existingClient = await Client.findOne({
@@ -85,6 +85,38 @@ exports.getClientById = async (req, res) => {
   }
 };
 
+exports.getClientProfile = async (req, res) => {
+  try {
+    console.log("Fetching profile for user ID:", req.user.id); // Add this line
+    
+    const client = await Client.findById(req.user.id).select('-password');
+    
+    if (!client) {
+      console.log("Client not found for ID:", req.user.id); // Add this line
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    console.log("Found client:", client); // Add this line
+    
+    res.status(200).json({
+      fullName: client.fullName,
+      email: client.email,
+      profilePicture: client.profilePicture,
+      username: client.username,
+      companyName: client.companyName
+    });
+  } catch (error) {
+    console.error("Detailed error:", {
+      message: error.message,
+      stack: error.stack,
+      fullError: error
+    }); // Enhanced error logging
+    res.status(500).json({ 
+      message: "Server error",
+      error: error.message // Send the actual error message to client
+    });
+  }
+};
 // Update client details
 exports.updateClient = async (req, res) => {
   try {
