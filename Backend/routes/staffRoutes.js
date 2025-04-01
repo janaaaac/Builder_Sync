@@ -18,6 +18,16 @@ router.get("/company-staff",
   staffController.getCompanyStaff
 );
 
+// Add this to staffRoutes.js
+
+// Delete staff member (company role required)
+router.delete("/:id", 
+  requireAuth, 
+  requireRole("company"), 
+  staffController.deleteStaff
+);
+
+
 // Staff-specific routes (require staff role)
 // These routes are for staff members to manage their own profiles
 router.get("/profile", 

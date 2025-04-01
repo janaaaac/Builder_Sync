@@ -307,3 +307,46 @@ async function generatePresignedUrlsForStaff(staff) {
   
   return staffObj;
 }
+
+// Delete staff member
+exports.deleteStaff = async (req, res) => {
+  try {
+    const staffId = req.params.id;
+    const companyId = req.user._id;
+
+    // Find the staff member
+    const staff = await Staff.findById(staffId);
+    
+    // Check if staff exists
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        message: "Staff member not found"
+      });
+    }
+    
+    // Check if the staff belongs to the company making the request
+    if (staff.company.toString() !== companyId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized: You can only delete staff members from your company"
+      });
+    }
+    
+    // Delete the staff member
+    await Staff.findByIdAndDelete(staffId);
+    
+    res.status(200).json({
+      success: true,
+      message: "Staff member deleted successfully"
+    });
+    
+  } catch (error) {
+    console.error("Delete staff error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
