@@ -10,6 +10,7 @@ import {
   Setting2,
   Profile2User,
   DocumentText,
+  Gallery, // Import the Gallery icon for Portfolio
 } from "iconsax-react";
 import axios from "axios";
 
@@ -17,6 +18,9 @@ const CompanySidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState("Dashboard");
   const navigate = useNavigate();
+  
+  // Add portfolio completion status
+  const [portfolioComplete, setPortfolioComplete] = useState(false);
   
   // Enhanced company data state management
   const [companyData, setCompanyData] = useState({
@@ -50,6 +54,10 @@ const CompanySidebar = () => {
         console.log("Profile response:", response.data);
         
         if (response.data.success) {
+          // Check if portfolio is complete from the response
+          const hasPortfolio = response.data.data.hasPortfolio || false;
+          setPortfolioComplete(hasPortfolio);
+          
           setCompanyData({
             ...response.data.data,
             loading: false,
@@ -90,7 +98,18 @@ const CompanySidebar = () => {
       }
     };
 
+    // Listen for portfolio completion event in localStorage
+    const onPortfolioComplete = () => {
+      fetchCompanyProfile();
+    };
+
+    window.addEventListener('portfolioComplete', onPortfolioComplete);
+
     fetchCompanyProfile();
+
+    return () => {
+      window.removeEventListener('portfolioComplete', onPortfolioComplete);
+    };
   }, [navigate]);
 
   const toggleSidebar = () => {
@@ -101,13 +120,26 @@ const CompanySidebar = () => {
     setActiveItem(item);
     if (item === "Team") {
       navigate('/staff-management');
+      return;
     }
     if (item === "Projects") {
       navigate('/project-showcase');
+      return;
     }
     if (item === "Settings") {
       navigate('/company-profile');
+      return;
     }
+    if (item === "Portfolio") {
+      // Always check the latest value of portfolioComplete
+      if (portfolioComplete === true) {
+        navigate('/portfolio-profile');
+      } else {
+        navigate('/portfolio-setup-test');
+      }
+      return;
+    }
+    // ...add other menu items if needed...
   };
 
   const handleLogout = () => {
@@ -238,6 +270,7 @@ const CompanySidebar = () => {
           {[
             { name: "Dashboard", icon: Category },
             { name: "Projects", icon: Note },
+            { name: "Portfolio", icon: Gallery }, // New Portfolio menu item
             { name: "Proposals", icon: DocumentText },
             { name: "Team", icon: Profile2User },
             { name: "Financials", icon: DollarSquare },
@@ -262,6 +295,11 @@ const CompanySidebar = () => {
               {!isCollapsed && (
                 <span className={`ml-3 ${activeItem === item.name ? "font-medium" : ""}`}>
                   {item.name}
+                  {item.name === "Portfolio" && !portfolioComplete && (
+                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                      New
+                    </span>
+                  )}
                 </span>
               )}
             </li>

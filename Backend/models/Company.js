@@ -20,6 +20,11 @@ const CompanySchema = new mongoose.Schema({
   specializedLicenses: { type: [String] }, // Array of strings
   isoCertifications: { type: [String] },   // Array of strings
   isApproved: { type: Boolean, default: false }, // Admin Approval
+  // Add the hasPortfolio field to track if a company has set up their portfolio
+  hasPortfolio: {
+    type: Boolean,
+    default: false
+  },
 });
 
 // Hash password before saving

@@ -23,14 +23,21 @@ import CompanyManagement from './Admin/CompanyManagement';
 // Client imports
 import ClientSettings from './client/clientProfile';
 import ClientSidebar from './client/clientSidebar';
+import AllCompanies from './client/AllCompanies'; // Add this import
 import CompanySidebar from './company/CompanySideBar';
 import CompanySettings from './company/CompanyProfile';
-import CreateStaffForm from './company/staff';
 import FirstLoginSetup from './auth/FirstLoginStaff';
-import StaffSidebar from './Staff/staffSideBar';
 import StaffDashboard from './Staff/StaffDashboard';
 import StaffManagement from './company/staff';
 import StaffSettings from './Staff/staffProfile';
+import PortfolioProfileSetup from './company/PortfolioProfileSetup';
+import ConstructionPortfolioProfile from './company/CompanyPortfolioProfile';
+import ProjectDetails from './company/ProjectDetails';
+
+
+
+
+
 // Fix: Correct the import or create a placeholder component
 // Option 1: Fix the import path if the file exists elsewhere
 // import ClientSidebar from './client/Sidebar'; 
@@ -41,7 +48,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/lan" element={<LandingPage />} />
         <Route path="/register-category" element={<RegistrationCategory />} />
 
         {/* Auth routes */}
@@ -61,6 +68,7 @@ function App() {
         {/* Client routes */}
         <Route path="/client-dashboard" element={<ClientSidebar />} />
         <Route path="/client-profile" element={<ClientSettings />} />
+        <Route path="/all-companies" element={<AllCompanies />} /> {/* Added AllCompanies route */}
 
         {/* Company routes */}
         <Route path="/company-dashboard" element={<CompanySidebar />} />
@@ -69,6 +77,19 @@ function App() {
         <Route path="/first-login" element={<FirstLoginSetup />} />
         <Route path="/staff-dashboard" element={<StaffDashboard />} />
         <Route path="/staff-settings" element={<StaffSettings />} />
+
+        
+
+        
+
+        {/* Portfolio routes */}
+        <Route path="/portfolio-setup-test" element={<PortfolioProfileSetup />} />
+        <Route path="/portfolio/:companyId" element={<ConstructionPortfolioProfile />} />
+        <Route path="/portfolio-profile" element={<ConstructionPortfolioProfile />} /> {/* Keep for backward compatibility */}
+        <Route path="/project-details" element={<ProjectDetails />} />
+        <Route path="/project-details/:projectId" element={<ProjectDetails />} /> {/* Add this route */}
+
+       
 
         {/* Add a catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />

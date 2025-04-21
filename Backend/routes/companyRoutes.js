@@ -30,4 +30,7 @@ router.put("/profile", companyController.updateCompanyProfile);
 // Delete a company
 router.delete("/:id", companyController.deleteCompany);
 
+// Add this route for company profile (must be after requireAuth and requireRole)
+router.get('/profile', requireAuth, requireRole('company'), companyController.getCompanyProfile);
+
 module.exports = router;

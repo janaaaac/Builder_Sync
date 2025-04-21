@@ -4,6 +4,10 @@ const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const https = require('https');
 const requireAuth = require('../middleware/requireAuth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const multerS3 = require('multer-s3');
 
 // Initialize S3 client
 const s3Client = new S3Client({
@@ -182,6 +186,61 @@ router.post('/sign-url', async (req, res) => {
   } catch (error) {
     console.error('Error generating signed URL:', error);
     res.status(500).json({ message: 'Failed to generate signed URL' });
+  }
+});
+
+// Set up multer storage with S3
+const upload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: process.env.AWS_BUCKET_NAME,
+    metadata: function (req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: function (req, file, cb) {
+      // Create unique filename for S3
+      const fileName = `portfolio/${Date.now()}-${path.basename(file.originalname).replace(/\s+/g, '-')}`;
+      cb(null, fileName);
+    },
+    contentType: multerS3.AUTO_CONTENT_TYPE
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    // Accept images only
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+      return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  }
+});
+
+// Protected routes
+router.use(requireAuth);
+
+// File upload endpoint using S3
+router.post('/upload', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded'
+      });
+    }
+
+    // Return the S3 URL of the uploaded file
+    const fileUrl = req.file.location; // multer-s3 provides the location property
+    
+    res.status(200).json({
+      success: true,
+      url: fileUrl,
+      message: 'File uploaded successfully to S3'
+    });
+  } catch (error) {
+    console.error('Error uploading file to S3:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading file to S3'
+    });
   }
 });
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const clientController = require('../controllers/clientController');
+const companyController = require('../controllers/companyController'); // Add this import
 const { uploadFields } = require('../utils/upload');
 const requireAuth = require('../middleware/requireAuth');
 
@@ -15,6 +16,9 @@ router.get('/', clientController.getClients);
 
 // Get client profile - add auth middleware ONLY to this route
 router.get('/profile', requireAuth, clientController.getClientProfile);
+
+// New endpoint - Get all companies for client dashboard
+router.get('/companies', requireAuth, companyController.getCompanies);
 
 // Get a specific client by ID (no auth required)
 router.get('/:id', clientController.getClientById);

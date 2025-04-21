@@ -94,37 +94,30 @@ exports.getCompanyById = async (req, res) => {
 // Add this to your companyController.js
 exports.getCompanyProfile = async (req, res) => {
   try {
-    // Company is already attached to req.user by requireAuth
-    const company = req.user;
-
-    // Ensure we're dealing with a company
-    if (company.role !== 'company') {
-      return res.status(403).json({ 
+    const companyId = req.user._id;
+    const company = await Company.findById(companyId).select('-password');
+    if (!company) {
+      return res.status(404).json({
         success: false,
-        message: "Company access only" 
+        message: 'Company not found'
       });
     }
-
     res.status(200).json({
       success: true,
       data: {
-        id: company._id,
-        username: company.username,
-        email: company.email,
         companyName: company.companyName,
-        contactPersonName: company.contactPersonName,
-        contactPhoneNumber: company.contactPhoneNumber,
-        registeredOfficeAddress: company.registeredOfficeAddress,
-        websiteURL: company.websiteURL,
+        email: company.email,
         companyLogo: company.companyLogo,
-        isApproved: company.isApproved
+        contactPersonName: company.contactPersonName,
+        isApproved: company.isApproved,
+        hasPortfolio: !!company.hasPortfolio // ensure boolean
       }
     });
   } catch (error) {
-    console.error("Profile Error:", error);
+    console.error('Error getting company profile:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch company profile"
+      message: 'Server error'
     });
   }
 };

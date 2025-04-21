@@ -181,7 +181,7 @@ const ClientSidebar = ({ onCollapseChange }) => {
         navigate('/client-projects');
         break;
       case "Documents":
-        navigate('/client-documents');
+        navigate('/all-companies');
         break;
       case "Settings":
         navigate('/client-profile');
