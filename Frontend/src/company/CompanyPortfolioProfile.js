@@ -2,13 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Phone,
-  Mail,
-  MapPin,
-  Building2,
-  Hammer,
-  Users,
-  Clock,
+  Phone,Mail,MapPin,Building2,Hammer,Users,Clock,
   ChevronRight,
   ExternalLink,
   CheckCircle2,
@@ -23,7 +17,10 @@ import {
   Star,
   Edit3,
   Save,
-  X
+  Plus,
+  X,
+  Image,
+  AlignLeft
 } from 'lucide-react';
 import CompanySidebar from './CompanySideBar'; // <-- Import the sidebar
 
@@ -653,19 +650,18 @@ const ConstructionPortfolioProfile = () => {
   };
 
   // Function for handling nested object changes
-  const handleNestedChange = (section, subsection, field, value) => {
+  const handleNestedChange = (section, field, value) => {
     setEditedPortfolio(prev => {
       const updated = { ...prev };
       
+      // Initialize the section if it doesn't exist
       if (!updated[section]) {
         updated[section] = {};
       }
       
-      if (!updated[section][subsection]) {
-        updated[section][subsection] = {};
-      }
+      // Set the value
+      updated[section][field] = value;
       
-      updated[section][subsection][field] = value;
       return updated;
     });
   };
@@ -692,17 +688,28 @@ const ConstructionPortfolioProfile = () => {
 
     const formSections = {
       hero: (
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold border-b pb-2">Edit Hero Section</h2>
+        <div className="space-y-8">
+          <div className="bg-orange-50 border border-orange-100 p-5 rounded-xl flex items-start">
+            <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+              <Building2 className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Hero Section</h3>
+              <p className="text-sm text-gray-600">Update the main banner section of your portfolio.</p>
+            </div>
+          </div>
           
           {/* Background Image Section */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-700">Background Image</h3>
+          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+            <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <Image className="w-5 h-5 mr-2 text-orange-500" />
+              Background Image
+            </h4>
             
             {/* Current image preview */}
             {editedPortfolio?.hero?.backgroundImage && (
-              <div className="mb-4">
-                <div className="w-full h-40 rounded-lg overflow-hidden">
+              <div className="mb-6">
+                <div className="w-full h-60 rounded-lg overflow-hidden border border-gray-200">
                   <img 
                     src={editedPortfolio.hero.backgroundImage}
                     alt="Current background"
@@ -717,7 +724,7 @@ const ConstructionPortfolioProfile = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Update Background:
               </label>
-              <div className="flex items-center justify-center border-2 border-dashed border-gray-300 p-6 rounded-lg">
+              <div className="flex items-center justify-center border-2 border-dashed border-gray-300 p-6 rounded-lg hover:bg-gray-50 transition-colors">
                 <input
                   type="file"
                   accept="image/*"
@@ -734,7 +741,8 @@ const ConstructionPortfolioProfile = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <span className="text-gray-600 text-sm">Click to select a new image</span>
+                  <span className="text-gray-600 text-sm font-medium">Click to select a new image</span>
+                  <p className="text-xs text-gray-500 mt-1">Recommended size: 1920×1080px</p>
                 </label>
               </div>
             </div>
@@ -754,518 +762,704 @@ const ConstructionPortfolioProfile = () => {
           </div>
           
           {/* Text Content Section */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-700">Text Content</h3>
+          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+            <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <AlignLeft className="w-5 h-5 mr-2 text-orange-500" />
+              Text Content
+            </h4>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
-              <input 
-                type="text" 
-                className="w-full p-2 border rounded"
-                value={editedPortfolio?.hero?.tagline || "Leading Construction Company"}
-                onChange={(e) => handleInputChange('hero', 'tagline', e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Main Heading</label>
-              <input 
-                type="text" 
-                className="w-full p-2 border rounded"
-                value={editedPortfolio?.hero?.mainHeading || "Building Tomorrow's"}
-                onChange={(e) => handleInputChange('hero', 'mainHeading', e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Accent Heading</label>
-              <input 
-                type="text" 
-                className="w-full p-2 border rounded text-orange-500"
-                value={editedPortfolio?.hero?.accentHeading || "Landmarks"}
-                onChange={(e) => handleInputChange('hero', 'accentHeading', e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea 
-                className="w-full p-2 border rounded h-32"
-                value={editedPortfolio?.hero?.description || ""}
-                onChange={(e) => handleInputChange('hero', 'description', e.target.value)}
-              ></textarea>
-            </div>
-          </div>
-        </div>
-      ),
-      stats: (
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold border-b pb-2">Edit Statistics</h2>
-          
-          <button
-            onClick={() => handleAddItem('statistics', { label: 'New Stat', value: '0', icon: 'Star' })}
-            className="bg-orange-500 text-white px-4 py-2 rounded mb-4"
-          >
-            Add New Statistic
-          </button>
-          
-          <div className="space-y-8">
-            {(editedPortfolio?.statistics || stats).map((stat, index) => (
-              <div key={index} className="p-4 border rounded-lg bg-gray-50 relative">
-                <button 
-                  onClick={() => handleRemoveItem('statistics', index)}
-                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
-                    <select 
-                      className="w-full p-2 border rounded"
-                      value={stat.icon?.name || 'Star'}
-                      onChange={(e) => {
-                        const updatedStat = { ...stat, icon: e.target.value };
-                        handleUpdateItem('statistics', index, updatedStat);
-                      }}
-                    >
-                      {Object.keys(iconMap).filter(k => !k.includes('.')).map(iconName => (
-                        <option key={iconName} value={iconName}>{iconName}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
-                    <input 
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={stat.value || ''}
-                      onChange={(e) => {
-                        const updatedStat = { ...stat, value: e.target.value };
-                        handleUpdateItem('statistics', index, updatedStat);
-                      }}
-                    />
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Label</label>
-                  <input 
-                    type="text"
-                    className="w-full p-2 border rounded"
-                    value={stat.label || ''}
-                    onChange={(e) => {
-                      const updatedStat = { ...stat, label: e.target.value };
-                      handleUpdateItem('statistics', index, updatedStat);
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ),
-      services: (
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold border-b pb-2">Edit Services</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Services Heading</label>
-              <input 
-                type="text"
-                className="w-full p-2 border rounded"
-                value={editedPortfolio?.servicesHeading || "Our Services"}
-                onChange={(e) => handleInputChange('servicesHeading', '', e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Services Summary</label>
-              <textarea
-                className="w-full p-2 border rounded h-24"
-                value={editedPortfolio?.servicesSummary || "We offer comprehensive construction solutions tailored to meet diverse project requirements across various sectors."}
-                onChange={(e) => handleInputChange('servicesSummary', '', e.target.value)}
-              ></textarea>
-            </div>
-          </div>
-          
-          <button
-            onClick={() => handleAddItem('services', { 
-              icon: 'Building',
-              title: 'New Service',
-              description: 'Describe this service',
-              ctaText: 'Learn More'
-            })}
-            className="bg-orange-500 text-white px-4 py-2 rounded mb-4"
-          >
-            Add New Service
-          </button>
-          
-          <div className="space-y-8 max-h-96 overflow-y-auto p-2">
-            {(editedPortfolio?.services || processedServices).map((service, index) => (
-              <div key={index} className="p-4 border rounded-lg bg-gray-50 relative">
-                <button 
-                  onClick={() => handleRemoveItem('services', index)}
-                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
-                    <select 
-                      className="w-full p-2 border rounded"
-                      value={typeof service.icon === 'string' ? service.icon : 'Building'}
-                      onChange={(e) => {
-                        const updatedService = { ...service, icon: e.target.value };
-                        handleUpdateItem('services', index, updatedService);
-                      }}
-                    >
-                      {Object.keys(iconMap).filter(k => !k.includes('.')).map(iconName => (
-                        <option key={iconName} value={iconName}>{iconName}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Button Text</label>
-                    <input 
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={service.ctaText || 'Learn More'}
-                      onChange={(e) => {
-                        const updatedService = { ...service, ctaText: e.target.value };
-                        handleUpdateItem('services', index, updatedService);
-                      }}
-                    />
-                  </div>
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                  <input 
-                    type="text"
-                    className="w-full p-2 border rounded"
-                    value={service.title || ''}
-                    onChange={(e) => {
-                      const updatedService = { ...service, title: e.target.value };
-                      handleUpdateItem('services', index, updatedService);
-                    }}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea 
-                    className="w-full p-2 border rounded h-24"
-                    value={service.description || ''}
-                    onChange={(e) => {
-                      const updatedService = { ...service, description: e.target.value };
-                      handleUpdateItem('services', index, updatedService);
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ),
-      whyChooseUs: (
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold border-b pb-2">Edit Why Choose Us Section</h2>
-          
-          {/* Heading & Subheading */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Section Heading</label>
-              <input 
-                type="text"
-                className="w-full p-2 border rounded"
-                value={editedPortfolio?.whyChooseUs?.heading || whyChooseUs.heading}
-                onChange={(e) => handleNestedChange('whyChooseUs', '', 'heading', e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Section Subheading</label>
-              <input 
-                type="text"
-                className="w-full p-2 border rounded"
-                value={editedPortfolio?.whyChooseUs?.subheading || whyChooseUs.subheading}
-                onChange={(e) => {
-                  // Use direct object update instead of handleNestedChange to ensure it works properly
-                  setEditedPortfolio(prev => ({
-                    ...prev,
-                    whyChooseUs: {
-                      ...(prev.whyChooseUs || {}),
-                      subheading: e.target.value
-                    }
-                  }));
-                }}
-              />
-            </div>
-          </div>
-          
-          {/* Background Image */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-700">Section Image</h3>
-            
-            {/* Current image preview */}
-            {(editedPortfolio?.whyChooseUs?.image || whyChooseUs.image) && (
-              <div className="mb-4">
-                <div className="w-full h-40 rounded-lg overflow-hidden">
-                  <img 
-                    src={editedPortfolio?.whyChooseUs?.image || whyChooseUs.image}
-                    alt="Why Choose Us"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            )}
-            
-            {/* File upload input */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Update Image:
-              </label>
-              <div className="flex items-center justify-center border-2 border-dashed border-gray-300 p-6 rounded-lg">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  id="whyChooseUs-image-upload"
-                  onChange={handleWhyChooseUsImageUpload}
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Tagline</label>
+                <input 
+                  type="text" 
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                  value={editedPortfolio?.hero?.tagline || "Leading Construction Company"}
+                  onChange={(e) => handleInputChange('hero', 'tagline', e.target.value)}
+                  placeholder="e.g. Leading Construction Company"
                 />
-                <label
-                  htmlFor="whyChooseUs-image-upload"
-                  className="cursor-pointer flex flex-col items-center"
-                >
-                  <div className="bg-gray-100 p-4 rounded-full mb-3">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-gray-600 text-sm">Click to select a new image</span>
-                </label>
+                <p className="text-xs text-gray-500">Short phrase that appears above the main heading</p>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Main Heading</label>
+                <input 
+                  type="text" 
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                  value={editedPortfolio?.hero?.mainHeading || "Building Tomorrow's"}
+                  onChange={(e) => handleInputChange('hero', 'mainHeading', e.target.value)}
+                  placeholder="e.g. Building Tomorrow's"
+                />
+                <p className="text-xs text-gray-500">First part of the main headline</p>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Accent Heading</label>
+                <input 
+                  type="text" 
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all text-orange-500"
+                  value={editedPortfolio?.hero?.accentHeading || "Landmarks"}
+                  onChange={(e) => handleInputChange('hero', 'accentHeading', e.target.value)}
+                  placeholder="e.g. Landmarks"
+                />
+                <p className="text-xs text-gray-500">Highlighted part of the headline (appears in orange)</p>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea 
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all h-32"
+                  value={editedPortfolio?.hero?.description || ""}
+                  onChange={(e) => handleInputChange('hero', 'description', e.target.value)}
+                  placeholder="Describe your company and services in a few sentences..."
+                ></textarea>
+                <p className="text-xs text-gray-500">Brief overview of your company that appears below the heading</p>
               </div>
             </div>
-            
-            {/* Upload progress indicator */}
-            {uploadingImage && uploadSection === 'whyChooseUs.image' && (
-              <div className="mt-2 mb-4">
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-orange-500 h-2.5 rounded-full"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-gray-600 mt-1">Uploading: {uploadProgress}%</p>
-              </div>
-            )}
+          </div>
+        </div>
+      ),
+      
+      stats: (
+        <div className="space-y-8">
+          <div className="bg-blue-50 border border-blue-100 p-5 rounded-xl flex items-start">
+            <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+              <Trophy className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Statistics Section</h3>
+              <p className="text-sm text-gray-600">Update your company's key statistics and achievements.</p>
+            </div>
           </div>
           
-          {/* Features */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-gray-700">Features</h3>
-              <button
-                onClick={() => {
-                  const features = editedPortfolio?.whyChooseUs?.features || [];
-                  handleNestedChange('whyChooseUs', '', 'features', [
-                    ...features,
-                    { icon: 'Star', title: 'New Feature', desc: 'Description goes here' }
-                  ]);
-                }}
-                className="bg-orange-500 text-white px-3 py-1 rounded text-sm"
+          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-lg font-medium text-gray-900">Company Statistics</h4>
+              {/* <button
+                onClick={() => handleAddItem('statistics', { label: 'New Statistic', value: '0', icon: 'trophy' })}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1"
               >
-                Add Feature
-              </button>
+                <Plus className="w-4 h-4" />
+                Add Statistic
+              </button> */}
             </div>
             
-            <div className="space-y-6 max-h-96 overflow-y-auto p-2">
-              {(editedPortfolio?.whyChooseUs?.features || whyChooseUs.features).map((feature, index) => (
-                <div key={index} className="p-4 border rounded-lg bg-gray-50 relative">
-                  <button 
-                    onClick={() => {
-                      const features = [...(editedPortfolio?.whyChooseUs?.features || whyChooseUs.features)];
-                      features.splice(index, 1);
-                      handleNestedChange('whyChooseUs', '', 'features', features);
-                    }}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+            <div className="space-y-6">
+              {(editedPortfolio?.statistics || []).map((stat, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h5 className="font-medium text-gray-700">Statistic #{index + 1}</h5>
+                    <button
+                      onClick={() => handleRemoveItem('statistics', index)}
+                      className="text-red-500 hover:text-red-600"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                   
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
-                      <select 
-                        className="w-full p-2 border rounded"
-                        value={feature.icon || 'Star'}
-                        onChange={(e) => {
-                          // Direct state update for more reliable changes
-                          setEditedPortfolio(prev => {
-                            const updatedFeatures = [...(prev.whyChooseUs?.features || whyChooseUs.features)];
-                            updatedFeatures[index] = { 
-                              ...updatedFeatures[index], 
-                              icon: e.target.value 
-                            };
-                            return {
-                              ...prev,
-                              whyChooseUs: {
-                                ...(prev.whyChooseUs || {}),
-                                features: updatedFeatures
-                              }
-                            };
-                          });
-                        }}
-                      >
-                        {Object.keys(iconMap).filter(k => !k.includes('.')).map(iconName => (
-                          <option key={iconName} value={iconName}>{iconName}</option>
-                        ))}
-                      </select>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Label</label>
+                      <input
+                        type="text"
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        value={stat.label || ''}
+                        onChange={(e) => handleUpdateItem('statistics', index, { label: e.target.value })}
+                        placeholder="e.g. Years Experience"
+                      />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                      <input 
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                      <input
                         type="text"
-                        className="w-full p-2 border rounded"
-                        value={feature.title || ''}
-                        onChange={(e) => {
-                          // Direct state update for more reliable changes
-                          setEditedPortfolio(prev => {
-                            const updatedFeatures = [...(prev.whyChooseUs?.features || whyChooseUs.features)];
-                            updatedFeatures[index] = { 
-                              ...updatedFeatures[index], 
-                              title: e.target.value 
-                            };
-                            return {
-                              ...prev,
-                              whyChooseUs: {
-                                ...(prev.whyChooseUs || {}),
-                                features: updatedFeatures
-                              }
-                            };
-                          });
-                        }}
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        value={stat.value || ''}
+                        onChange={(e) => handleUpdateItem('statistics', index, { value: e.target.value })}
+                        placeholder="e.g. 25+"
                       />
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea 
-                      className="w-full p-2 border rounded h-16"
-                      value={feature.desc || ''}
-                      onChange={(e) => {
-                        // Direct state update for more reliable changes
-                        setEditedPortfolio(prev => {
-                          const updatedFeatures = [...(prev.whyChooseUs?.features || whyChooseUs.features)];
-                          updatedFeatures[index] = { 
-                            ...updatedFeatures[index], 
-                            desc: e.target.value 
-                          };
-                          return {
-                            ...prev,
-                            whyChooseUs: {
-                              ...(prev.whyChooseUs || {}),
-                              features: updatedFeatures
-                            }
-                          };
-                        });
-                      }}
-                    />
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                      <select
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        value={stat.icon || 'trophy'}
+                        onChange={(e) => handleUpdateItem('statistics', index, { icon: e.target.value })}
+                      >
+                        <option value="trophy">Trophy</option>
+                        <option value="users">Team/Users</option>
+                        <option value="building">Building</option>
+                        <option value="check">Checkmark</option>
+                        <option value="star">Star</option>
+                        <option value="clock">Clock</option>
+                        <option value="hardhat">Hardhat</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      ),
-      // Add more sections as needed: whyChooseUs, contact, etc.
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl relative mx-4 my-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
-          <button 
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            onClick={closeEditForm}
-          >
-            <X className="w-6 h-6" />
-          </button>
-          
-          <div className="flex">
-            {/* Sidebar Navigation */}
-            <div className="w-48 border-r pr-4">
-              <ul className="space-y-2">
-                <li
-                  className={`p-2 rounded cursor-pointer ${activeEditSection === 'hero' ? 'bg-orange-100 text-orange-700' : 'hover:bg-gray-100'}`}
-                  onClick={() => setActiveEditSection('hero')}
-                >
-                  Hero Section
-                </li>
-                <li
-                  className={`p-2 rounded cursor-pointer ${activeEditSection === 'stats' ? 'bg-orange-100 text-orange-700' : 'hover:bg-gray-100'}`}
-                  onClick={() => setActiveEditSection('stats')}
-                >
-                  Statistics
-                </li>
-                <li
-                  className={`p-2 rounded cursor-pointer ${activeEditSection === 'services' ? 'bg-orange-100 text-orange-700' : 'hover:bg-gray-100'}`}
-                  onClick={() => setActiveEditSection('services')}
-                >
-                  Services
-                </li>
-                <li
-                  className={`p-2 rounded cursor-pointer ${activeEditSection === 'whyChooseUs' ? 'bg-orange-100 text-orange-700' : 'hover:bg-gray-100'}`}
-                  onClick={() => setActiveEditSection('whyChooseUs')}
-                >
-                  Why Choose Us
-                </li>
-                {/* Add more nav items as needed */}
-              </ul>
-            </div>
-            
-            {/* Content Area */}
-            <div className="flex-1 pl-6 overflow-y-auto">
-              {formSections[activeEditSection] || (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                  <div className="mb-4 p-4 bg-gray-100 rounded-full">
-                    <Edit3 className="w-10 h-10" />
-                  </div>
-                  <p>Select a section to edit from the sidebar</p>
+              
+              {(editedPortfolio?.statistics || []).length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="mb-2">No statistics added yet.</div>
+                  <button
+                    onClick={() => handleAddItem('statistics', { label: 'Years Experience', value: '25+', icon: 'trophy' })}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+                  >
+                    Add First Statistic
+                  </button>
                 </div>
               )}
             </div>
           </div>
+        </div>
+      ),
+      
+      services: (
+        <div className="space-y-8">
+          <div className="bg-green-50 border border-green-100 p-5 rounded-xl flex items-start">
+            <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+              <Hammer className="w-5 h-5 text-green-500" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Services Section</h3>
+              <p className="text-sm text-gray-600">Update the services offered by your company.</p>
+            </div>
+          </div>
           
-          {/* Form Controls */}
-          <div className="flex justify-end gap-3 mt-8 pt-4 border-t">
+          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+            <div className="mb-6">
+              <h4 className="text-lg font-medium text-gray-900 mb-2">Section Headings</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Section Heading</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    value={editedPortfolio?.servicesHeading || "Our Services"}
+                    onChange={(e) => handleInputChange('servicesHeading', e.target.value)}
+                    placeholder="e.g. Our Services"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Section Summary</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    value={editedPortfolio?.servicesSummary || "We offer comprehensive construction solutions..."}
+                    onChange={(e) => handleInputChange('servicesSummary', e.target.value)}
+                    placeholder="Brief description of your services"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 pt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h4 className="text-lg font-medium text-gray-900">Service Cards</h4>
+                {/* <button
+                  onClick={() => handleAddItem('services', { 
+                    title: 'New Service', 
+                    description: 'Description of the service', 
+                    icon: 'building',
+                    ctaText: 'Learn More'
+                  })}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Service
+                </button> */}
+              </div>
+              
+              <div className="space-y-6">
+                {(editedPortfolio?.services || []).map((service, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h5 className="font-medium text-gray-700">Service #{index + 1}</h5>
+                      <button
+                        onClick={() => handleRemoveItem('services', index)}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input
+                          type="text"
+                          className="w-full p-2 border border-gray-300 rounded-lg"
+                          value={service.title || ''}
+                          onChange={(e) => handleUpdateItem('services', index, { title: e.target.value })}
+                          placeholder="e.g. Commercial Construction"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                        <select
+                          className="w-full p-2 border border-gray-300 rounded-lg"
+                          value={service.icon || 'building'}
+                          onChange={(e) => handleUpdateItem('services', index, { icon: e.target.value })}
+                        >
+                          <option value="building">Commercial Building</option>
+                          <option value="home">Residential Home</option>
+                          <option value="factory">Factory/Industrial</option>
+                          <option value="ruler">Infrastructure/Ruler</option>
+                          <option value="truck">Transportation/Truck</option>
+                          <option value="warehouse">Warehouse</option>
+                          <option value="hammer">Construction/Hammer</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <textarea
+                        className="w-full p-2 border border-gray-300 rounded-lg h-20"
+                        value={service.description || ''}
+                        onChange={(e) => handleUpdateItem('services', index, { description: e.target.value })}
+                        placeholder="Brief description of the service"
+                      ></textarea>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">CTA Text</label>
+                      <input
+                        type="text"
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        value={service.ctaText || 'Learn More'}
+                        onChange={(e) => handleUpdateItem('services', index, { ctaText: e.target.value })}
+                        placeholder="e.g. Learn More"
+                      />
+                    </div>
+                  </div>
+                ))}
+                
+                {(editedPortfolio?.services || []).length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="mb-2">No services added yet.</div>
+                    <button
+                      onClick={() => handleAddItem('services', { 
+                        title: 'Commercial Construction', 
+                        description: 'Office buildings, retail spaces, and industrial facilities', 
+                        icon: 'building',
+                        ctaText: 'Learn More'
+                      })}
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Add First Service
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      
+      whyChooseUs: (
+        <div className="space-y-8">
+          <div className="bg-purple-50 border border-purple-100 p-5 rounded-xl flex items-start">
+            <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+              <CheckCircle2 className="w-5 h-5 text-purple-500" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Why Choose Us Section</h3>
+              <p className="text-sm text-gray-600">Update the reasons why clients should choose your company.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+            <h4 className="text-lg font-medium text-gray-900 mb-4">Section Content</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Section Heading</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  value={editedPortfolio?.whyChooseUs?.heading || "Why Choose Us"}
+                  onChange={(e) => handleNestedChange('whyChooseUs', 'heading', e.target.value)}
+                  placeholder="e.g. Why Choose Us"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Subheading</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  value={editedPortfolio?.whyChooseUs?.subheading || "Excellence in Construction, Committed to Quality"}
+                  onChange={(e) => handleNestedChange('whyChooseUs', 'subheading', e.target.value)}
+                  placeholder="e.g. Excellence in Construction, Committed to Quality"
+                />
+              </div>
+            </div>
+            
+            <div className="mb-8">
+              <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <Image className="w-5 h-5 mr-2 text-purple-500" />
+                Section Image
+              </h4>
+              
+              {/* Current image preview */}
+              {editedPortfolio?.whyChooseUs?.image && (
+                <div className="mb-6">
+                  <div className="w-full h-60 rounded-lg overflow-hidden border border-gray-200">
+                    <img 
+                      src={editedPortfolio.whyChooseUs.image}
+                      alt="Why Choose Us"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* File upload input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Update Image:
+                </label>
+                <div className="flex items-center justify-center border-2 border-dashed border-gray-300 p-6 rounded-lg hover:bg-gray-50 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="why-choose-us-image-upload"
+                    onChange={handleWhyChooseUsImageUpload}
+                  />
+                  <label
+                    htmlFor="why-choose-us-image-upload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    <div className="bg-gray-100 p-4 rounded-full mb-3">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-gray-600 text-sm font-medium">Click to select a new image</span>
+                    <p className="text-xs text-gray-500 mt-1">Recommended size: 800×600px</p>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Upload progress indicator */}
+              {uploadingImage && uploadSection === 'whyChooseUs.image' && (
+                <div className="mt-2 mb-4">
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div
+                      className="bg-purple-500 h-2.5 rounded-full"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Uploading: {uploadProgress}%</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="border-t border-gray-200 pt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h4 className="text-lg font-medium text-gray-900">Features</h4>
+                {/* <button
+                  onClick={() => {
+                    const currentFeatures = editedPortfolio?.whyChooseUs?.features || [];
+                    handleNestedChange('whyChooseUs', 'features', [
+                      ...currentFeatures,
+                      { icon: 'trophy', title: 'New Feature', desc: 'Description' }
+                    ]);
+                  }}
+                  className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Feature
+                </button> */}
+              </div>
+              
+              <div className="space-y-6">
+                {(editedPortfolio?.whyChooseUs?.features || []).map((feature, index) => {
+                  const currentFeatures = editedPortfolio?.whyChooseUs?.features || [];
+                  
+                  return (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h5 className="font-medium text-gray-700">Feature #{index + 1}</h5>
+                        <button
+                          onClick={() => {
+                            const updatedFeatures = [...currentFeatures];
+                            updatedFeatures.splice(index, 1);
+                            handleNestedChange('whyChooseUs', 'features', updatedFeatures);
+                          }}
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                          <input
+                            type="text"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            value={feature.title || ''}
+                            onChange={(e) => {
+                              const updatedFeatures = [...currentFeatures];
+                              updatedFeatures[index] = { ...feature, title: e.target.value };
+                              handleNestedChange('whyChooseUs', 'features', updatedFeatures);
+                            }}
+                            placeholder="e.g. Expert Team"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                          <input
+                            type="text"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            value={feature.desc || ''}
+                            onChange={(e) => {
+                              const updatedFeatures = [...currentFeatures];
+                              updatedFeatures[index] = { ...feature, desc: e.target.value };
+                              handleNestedChange('whyChooseUs', 'features', updatedFeatures);
+                            }}
+                            placeholder="e.g. Highly skilled professionals"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                          <select
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            value={feature.icon || 'CheckCircle2'}
+                            onChange={(e) => {
+                              const updatedFeatures = [...currentFeatures];
+                              updatedFeatures[index] = { ...feature, icon: e.target.value };
+                              handleNestedChange('whyChooseUs', 'features', updatedFeatures);
+                            }}
+                          >
+                            <option value="HardHat">Hard Hat</option>
+                            <option value="CheckCircle2">Checkmark</option>
+                            <option value="Clock">Clock</option>
+                            <option value="Trophy">Trophy</option>
+                            <option value="Star">Star</option>
+                            <option value="Users">Team/Users</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {(editedPortfolio?.whyChooseUs?.features || []).length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="mb-2">No features added yet.</div>
+                    <button
+                      onClick={() => {
+                        handleNestedChange('whyChooseUs', 'features', [
+                          { icon: 'HardHat', title: 'Expert Team', desc: 'Highly skilled professionals' }
+                        ]);
+                      }}
+                      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Add First Feature
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      
+      contact: (
+        <div className="space-y-8">
+          <div className="bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex items-start">
+            <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+              <Mail className="w-5 h-5 text-indigo-500" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Contact Information</h3>
+              <p className="text-sm text-gray-600">Update your company's contact details.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+            <h4 className="text-lg font-medium text-gray-900 mb-6">Company Contact Details</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-500">
+                    <Phone className="w-5 h-5" />
+                  </span>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-gray-300 rounded-r-lg"
+                    value={editedPortfolio?.contact?.phone || ""}
+                    onChange={(e) => handleNestedChange('contact', 'phone', e.target.value)}
+                    placeholder="e.g. +94 11 123 4567"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Email Address</label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-500">
+                    <Mail className="w-5 h-5" />
+                  </span>
+                  <input
+                    type="email"
+                    className="w-full p-2 border border-gray-300 rounded-r-lg"
+                    value={editedPortfolio?.contact?.email || ""}
+                    onChange={(e) => handleNestedChange('contact', 'email', e.target.value)}
+                    placeholder="e.g. info@yourcompany.com"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Office Address</label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-500">
+                  <MapPin className="w-5 h-5" />
+                </span>
+                <textarea
+                  className="w-full p-2 border border-gray-300 rounded-r-lg"
+                  rows="3"
+                  value={editedPortfolio?.contact?.address || ""}
+                  onChange={(e) => handleNestedChange('contact', 'address', e.target.value)}
+                  placeholder="Enter your office address"
+                ></textarea>
+              </div>
+            </div>
+            
+            <div className="mt-6 space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Company Website</label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-500">
+                  <ExternalLink className="w-5 h-5" />
+                </span>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded-r-lg"
+                  value={editedPortfolio?.contact?.website || ""}
+                  onChange={(e) => handleNestedChange('contact', 'website', e.target.value)}
+                  placeholder="e.g. https://www.yourcompany.com"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 overflow-y-auto p-4 backdrop-blur-sm transition-all duration-300">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-fadeIn">
+          {/* Enhanced header with gradient and subtle pattern */}
+          <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 text-white p-6 flex justify-between items-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.2)_0%,transparent_20%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.2)_0%,transparent_20%)]"></div>
+            
+            <div className="flex items-center space-x-3 relative z-10">
+              <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                <Edit3 className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Edit Company Portfolio</h2>
+                <p className="text-white/80 text-sm">Customize your company's portfolio display</p>
+              </div>
+            </div>
+            
             <button 
-              className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
               onClick={closeEditForm}
+              className="text-white/80 hover:text-white hover:bg-white/20 transition-all p-2 rounded-full"
+              title="Close editor"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          {/* Improved Tab Navigation with animated indicator */}
+          <div className="bg-gray-50 flex border-b border-gray-200 relative">
+            <div className="flex overflow-x-auto hide-scrollbar">
+              {[
+                {id: 'hero', label: 'Hero Section', icon: <Building2 className="w-4 h-4 mr-2" />},
+                {id: 'stats', label: 'Statistics', icon: <Trophy className="w-4 h-4 mr-2" />},
+                {id: 'services', label: 'Services', icon: <Hammer className="w-4 h-4 mr-2" />},
+                {id: 'whyChooseUs', label: 'Why Choose Us', icon: <CheckCircle2 className="w-4 h-4 mr-2" />},
+                {id: 'contact', label: 'Contact Info', icon: <Mail className="w-4 h-4 mr-2" />}
+              ].map(tab => (
+                <button 
+                  key={tab.id}
+                  className={`px-6 py-4 font-medium flex items-center whitespace-nowrap transition-all
+                    ${activeEditSection === tab.id 
+                      ? 'text-orange-600' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
+                  onClick={() => setActiveEditSection(tab.id)}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Animated underline indicator */}
+            <div className="absolute bottom-0 left-0 h-0.5 bg-orange-500 transition-all duration-300"
+                 style={{
+                   width: activeEditSection === 'hero' ? '130px' : 
+                          activeEditSection === 'stats' ? '120px' : 
+                          activeEditSection === 'services' ? '110px' :
+                          activeEditSection === 'whyChooseUs' ? '150px' : '130px',
+                   transform: `translateX(${
+                     activeEditSection === 'hero' ? '0' :
+                     activeEditSection === 'stats' ? '130px' :
+                     activeEditSection === 'services' ? '250px' :
+                     activeEditSection === 'whyChooseUs' ? '360px' : '510px'
+                   })`
+                 }}></div>
+          </div>
+          
+          {/* Form Content with custom scrollbar */}
+          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            {formSections[activeEditSection] || (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <div className="mb-4 p-4 bg-gray-100 rounded-full">
+                  <Edit3 className="w-10 h-10" />
+                </div>
+                <p>Select a section to edit from the tabs above</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Enhanced footer with better button styling */}
+          <div className="bg-gray-50 p-6 flex justify-end gap-3 border-t border-gray-200">
+            <button 
+              onClick={closeEditForm}
+              className="px-5 py-2.5 border border-gray-300 bg-white rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm font-medium"
+              disabled={saveLoading}
             >
               Cancel
             </button>
             <button 
-              className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center"
               onClick={saveChanges}
+              className="px-6 py-2.5 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg hover:from-orange-700 hover:to-orange-600 transition-colors flex items-center gap-2 shadow-sm font-medium"
               disabled={saveLoading}
             >
               {saveLoading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Saving...
                 </>
               ) : (
                 <>
-                  <Save className="w-5 h-5 mr-2" />
+                  <Save className="w-4 h-4" />
                   Save Changes
                 </>
               )}
@@ -1274,6 +1468,98 @@ const ConstructionPortfolioProfile = () => {
         </div>
       </div>
     );
+  };
+
+  // Fix for the Why Choose Us section - Update the handleNestedChange function
+  // const handleNestedChange = (section, field, value) => {
+  //   setEditedPortfolio(prev => {
+  //     const updated = { ...prev };
+      
+  //     // Initialize the section if it doesn't exist
+  //     if (!updated[section]) {
+  //       updated[section] = {};
+  //     }
+      
+  //     // Set the value
+  //     updated[section][field] = value;
+      
+  //     return updated;
+  //   });
+  // };
+
+  // Fix for nested objects in whyChooseUs and contact sections
+  const handleWhyChooseUsFeatureUpdate = (index, field, value) => {
+    setEditedPortfolio(prev => {
+      const updated = { ...prev };
+      
+      // Initialize whyChooseUs if it doesn't exist
+      if (!updated.whyChooseUs) {
+        updated.whyChooseUs = {};
+      }
+      
+      // Initialize features array if it doesn't exist
+      if (!updated.whyChooseUs.features) {
+        updated.whyChooseUs.features = [];
+      }
+      
+      // Copy the features array
+      const features = [...updated.whyChooseUs.features];
+      
+      // Initialize the feature object if it doesn't exist
+      if (!features[index]) {
+        features[index] = {};
+      }
+      
+      // Update the field
+      features[index] = {
+        ...features[index],
+        [field]: value
+      };
+      
+      // Set the updated features array
+      updated.whyChooseUs.features = features;
+      
+      return updated;
+    });
+  };
+
+  // Function to add a feature to Why Choose Us
+  const addWhyChooseUsFeature = (feature) => {
+    setEditedPortfolio(prev => {
+      const updated = { ...prev };
+      
+      // Initialize whyChooseUs if it doesn't exist
+      if (!updated.whyChooseUs) {
+        updated.whyChooseUs = {};
+      }
+      
+      // Initialize features array if it doesn't exist
+      if (!updated.whyChooseUs.features) {
+        updated.whyChooseUs.features = [];
+      }
+      
+      // Add the feature
+      updated.whyChooseUs.features = [...updated.whyChooseUs.features, feature];
+      
+      return updated;
+    });
+  };
+
+  // Function to remove a feature from Why Choose Us
+  const removeWhyChooseUsFeature = (index) => {
+    setEditedPortfolio(prev => {
+      const updated = { ...prev };
+      
+      // Return unchanged if whyChooseUs or features doesn't exist
+      if (!updated.whyChooseUs || !updated.whyChooseUs.features) {
+        return prev;
+      }
+      
+      // Filter out the feature at the given index
+      updated.whyChooseUs.features = updated.whyChooseUs.features.filter((_, i) => i !== index);
+      
+      return updated;
+    });
   };
 
   if (loading) {

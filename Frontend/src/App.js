@@ -33,15 +33,10 @@ import StaffSettings from './Staff/staffProfile';
 import PortfolioProfileSetup from './company/PortfolioProfileSetup';
 import ConstructionPortfolioProfile from './company/CompanyPortfolioProfile';
 import ProjectDetails from './company/ProjectDetails';
-
-
-
-
-
-// Fix: Correct the import or create a placeholder component
-// Option 1: Fix the import path if the file exists elsewhere
-// import ClientSidebar from './client/Sidebar'; 
-
+import ClientConstructionPortfolioProfile from './client/ClientConstructionPortfolioProfile';
+import ClientProjectDetails from './client/ClientProjectDetails'; // Add this import
+import ProjectProposalForm from './client/ProjectProposalForm';
+import ProposalManagement from './company/ProposalManagement';
 
 function App() {
   return (
@@ -69,6 +64,10 @@ function App() {
         <Route path="/client-dashboard" element={<ClientSidebar />} />
         <Route path="/client-profile" element={<ClientSettings />} />
         <Route path="/all-companies" element={<AllCompanies />} /> {/* Added AllCompanies route */}
+        <Route path="/client/construction-portfolio/:companyId" element={ <ClientConstructionPortfolioProfile />} />
+        <Route path="/client-project-details" element={<ClientProjectDetails />} />
+        <Route path="/client-project-details/:projectId" element={<ClientProjectDetails />} />
+        <Route path="/send-proposal" element={<ProjectProposalForm />} />
 
         {/* Company routes */}
         <Route path="/company-dashboard" element={<CompanySidebar />} />
@@ -77,6 +76,7 @@ function App() {
         <Route path="/first-login" element={<FirstLoginSetup />} />
         <Route path="/staff-dashboard" element={<StaffDashboard />} />
         <Route path="/staff-settings" element={<StaffSettings />} />
+        <Route path="/proposal-management" element={<ProposalManagement />} />
 
         
 

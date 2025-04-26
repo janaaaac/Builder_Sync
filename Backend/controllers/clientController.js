@@ -1,6 +1,7 @@
 const Client = require("../models/Client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Notification = require('../models/Notification');
 
 // Create a new client
 exports.createClient = async (req, res) => {
@@ -289,5 +290,91 @@ exports.uploadProfilePicture = async (req, res) => {
   } catch (error) {
     console.error("Error uploading profile picture:", error);
     res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+// Get proposal status notifications for a client
+exports.getProposalNotifications = async (req, res) => {
+  try {
+    const clientId = req.user._id;
+    
+    // Find notifications related to client's proposals
+    const notifications = await Notification.find({ 
+      userId: clientId,
+      type: { $in: ['proposal_approved', 'proposal_rejected'] }
+    })
+    .populate('proposal', 'projectTitle status')
+    .sort({ createdAt: -1 })
+    .limit(10);
+    
+    res.status(200).json({
+      success: true,
+      data: notifications
+    });
+  } catch (error) {
+    console.error('Error getting proposal notifications:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving notifications',
+      error: error.message
+    });
+  }
+};
+
+// Get all notifications for a client
+exports.getAllNotifications = async (req, res) => {
+  try {
+    const clientId = req.user._id;
+    
+    const notifications = await Notification.find({ userId: clientId })
+      .populate('proposal', 'projectTitle status')
+      .sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      data: notifications
+    });
+  } catch (error) {
+    console.error('Error getting all notifications:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving notifications',
+      error: error.message
+    });
+  }
+};
+
+// Mark notification as read
+exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clientId = req.user._id;
+    
+    const notification = await Notification.findOne({ 
+      _id: id,
+      userId: clientId
+    });
+    
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Notification not found'
+      });
+    }
+    
+    notification.isRead = true;
+    await notification.save();
+    
+    res.status(200).json({
+      success: true,
+      data: notification
+    });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating notification',
+      error: error.message
+    });
   }
 };

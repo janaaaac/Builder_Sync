@@ -513,3 +513,39 @@ exports.getProjectById = async (req, res) => {
     });
   }
 };
+
+// Get a company's portfolio by company ID (public access)
+exports.getPublicPortfolio = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company ID is required'
+      });
+    }
+    
+    // Fetch the portfolio from the database using the company ID
+    const portfolio = await Portfolio.findOne({ companyId });
+    
+    if (!portfolio) {
+      return res.status(404).json({
+        success: false,
+        message: 'Portfolio not found for this company'
+      });
+    }
+    
+    // Return the portfolio data
+    res.status(200).json({
+      success: true,
+      data: portfolio
+    });
+  } catch (error) {
+    console.error('Error fetching public portfolio:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching portfolio data'
+    });
+  }
+};

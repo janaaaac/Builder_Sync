@@ -130,6 +130,11 @@ const CompanySidebar = () => {
       navigate('/company-profile');
       return;
     }
+    if (item === "Proposals") {
+      navigate('/proposal-management');
+      return;
+    }
+  
     if (item === "Portfolio") {
       // Always check the latest value of portfolioComplete
       if (portfolioComplete === true) {

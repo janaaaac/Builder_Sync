@@ -12,6 +12,8 @@ const utilRoutes = require('./routes/utilRoutes');
 const staffRouter = require("./routes/staffRoutes");
 const portfolioRoutes = require('./routes/portfolioRoutes');
 const publicRoutes = require('./routes/publicRoutes');
+const ProposalRoutes = require('./routes/proposalRoutes');
+const notificationRoutes = require('./routes/notificationRoutes'); // Import the notification routes
 const app = express();
 app.use(express.json());
 
@@ -36,12 +38,14 @@ app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
 app.use('/api/utils', utilRoutes);
 app.use("/api/staff", staffRouter);
+app.use('/api/proposal', ProposalRoutes);
 
 // Remove the duplicate - keep only one portfolio route registration
 // app.use('/api/companies/portfolio', portfolioRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 
 app.use('/api/public', publicRoutes);
+app.use('/api/notifications', notificationRoutes); // Add the notification routes
 
 // Make uploads directory static so files can be accessed
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

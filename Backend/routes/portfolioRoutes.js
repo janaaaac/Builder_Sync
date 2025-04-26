@@ -17,6 +17,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// PUBLIC ROUTES - These should be placed BEFORE authentication middleware
+// Get a company's portfolio by company ID (accessible to clients)
+router.get('/public/:companyId', portfolioController.getPublicPortfolio);
+
 // Protected routes (company access only)
 router.use(requireAuth); // First verify token
 router.use(requireRole('company')); // Then check role

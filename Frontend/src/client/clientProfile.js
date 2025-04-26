@@ -63,6 +63,13 @@ const clientAPI = {
         'Content-Type': 'application/json'
       }
     });
+  },
+
+  getProposalNotifications: async () => {
+    const token = localStorage.getItem("token");
+    return axios.get(`${API_URL}/api/clients/notifications/proposals`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
   }
 };
 
@@ -99,6 +106,10 @@ export default function ClientSettings() {
     projectUpdates: true,
     marketingComms: false
   });
+
+  // Add state for proposal notifications
+  const [proposalNotifications, setProposalNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   // Handle sidebar collapse from the sidebar component
   const handleSidebarCollapse = (collapsed) => {
@@ -162,6 +173,13 @@ export default function ClientSettings() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Add effect to fetch proposal notifications when tab changes to notifications
+  useEffect(() => {
+    if (activeTab === 'notifications') {
+      fetchProposalNotifications();
+    }
+  }, [activeTab]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -385,6 +403,66 @@ export default function ClientSettings() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to fetch proposal notifications - improved error handling
+  const fetchProposalNotifications = async () => {
+    setNotificationsLoading(true);
+    try {
+      const response = await clientAPI.getProposalNotifications();
+      console.log("Proposal notifications:", response.data);
+      
+      if (response.data.success && response.data.data) {
+        setProposalNotifications(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching proposal notifications:", error);
+      
+      // Handle 404 errors gracefully - backend endpoint not implemented yet
+      if (error.response?.status === 404) {
+        console.log("Notifications endpoint not available yet - using mock data");
+        
+        // Use mock data temporarily until backend is ready
+        const mockData = [
+          {
+            _id: 'mock1',
+            type: 'proposal_rejected',
+            message: 'Your proposal was reviewed but unfortunately not accepted at this time.',
+            data: { reason: 'Budget constraints and timeline issues. The project scope exceeds our current capacity.' },
+            createdAt: new Date(Date.now() - 2*24*60*60*1000), // 2 days ago
+            proposal: { _id: 'proposal1', projectTitle: 'Home Renovation Project' }
+          },
+          {
+            _id: 'mock2',
+            type: 'proposal_approved',
+            message: 'Congratulations! Your project proposal has been approved.',
+            createdAt: new Date(Date.now() - 7*24*60*60*1000), // 7 days ago
+            proposal: { _id: 'proposal2', projectTitle: 'Office Renovation' }
+          }
+        ];
+        
+        setProposalNotifications(mockData);
+      } else {
+        // For other types of errors, show an empty state
+        setProposalNotifications([]);
+        toast.error("Failed to load notifications");
+      }
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  // Mock function for formatRelativeTime if it doesn't exist
+  const formatRelativeTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    return date.toLocaleDateString();
   };
 
   return (
@@ -668,9 +746,75 @@ export default function ClientSettings() {
               </div>
             ) : (
               <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                {/* Notifications tab content remains the same... */}
                 <div className="p-8">
                   <h2 className="text-xl font-semibold mb-6">Notification Preferences</h2>
+                  
+                  {/* Proposal Rejection Notifications Section */}
+                  <div className="mb-8 bg-gray-50 p-6 rounded-lg border-l-4 border-[#EA540C]">
+                    <h3 className="text-lg font-medium mb-4 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#EA540C]" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      Recent Proposal Updates
+                    </h3>
+                    
+                    {notificationsLoading ? (
+                      <div className="flex justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#EA540C]"></div>
+                      </div>
+                    ) : proposalNotifications.length > 0 ? (
+                      <div className="space-y-4">
+                        {proposalNotifications.map((notification) => (
+                          <div key={notification._id} className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium text-gray-800">{notification.proposal?.projectTitle || 'Project Proposal'}</h4>
+                                <p className={`${notification.type === 'proposal_rejected' ? 'text-red-600' : 'text-green-600'} text-sm font-medium mt-1`}>
+                                  {notification.type === 'proposal_rejected' ? 'Proposal Rejected' : 'Proposal Approved'}
+                                </p>
+                                <p className="text-gray-600 text-sm mt-2">
+                                  {notification.message}
+                                </p>
+                                {notification.data?.reason && (
+                                  <p className="text-gray-700 mt-2 text-sm bg-gray-50 p-3 rounded border-l-2 border-red-400">
+                                    <span className="font-medium">Reason: </span> 
+                                    {notification.data.reason}
+                                  </p>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-400">{formatRelativeTime(notification.createdAt)}</span>
+                            </div>
+                            <div className="mt-3 flex">
+                              <button 
+                                onClick={() => window.location.href = `/client/proposals/${notification.proposal?._id}`}
+                                className="text-sm text-[#EA540C] hover:text-[#c64509] font-medium"
+                              >
+                                View Details
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <p className="text-gray-500">No proposal notifications yet</p>
+                      </div>
+                    )}
+                    
+                    {proposalNotifications.length > 0 && (
+                      <div className="mt-4 text-center">
+                        <button className="inline-flex items-center text-[#EA540C] hover:text-[#c64509] font-medium">
+                          View All Notifications
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="space-y-6">

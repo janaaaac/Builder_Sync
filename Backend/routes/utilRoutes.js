@@ -244,4 +244,40 @@ router.post('/upload', upload.single('image'), (req, res) => {
   }
 });
 
+// Ensure directory exists route
+router.post('/ensure-directory', requireAuth, (req, res) => {
+  try {
+    const { path: directoryPath } = req.body;
+    
+    if (!directoryPath) {
+      return res.status(400).json({
+        success: false,
+        message: 'Directory path is required'
+      });
+    }
+    
+    // Sanitize path to prevent directory traversal attacks
+    const sanitizedPath = path.normalize(directoryPath).replace(/^(\.\.(\/|\\|$))+/, '');
+    const fullPath = path.join(__dirname, '..', sanitizedPath);
+    
+    // Create directory recursively if it doesn't exist
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true });
+      console.log(`Created directory: ${fullPath}`);
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: `Directory ${sanitizedPath} exists or was created successfully`
+    });
+  } catch (error) {
+    console.error('Error ensuring directory exists:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to ensure directory exists',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

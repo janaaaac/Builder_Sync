@@ -3,8 +3,10 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import ClientSidebar from './clientSidebar';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const CompanyCard = ({ company, index }) => {
+  const navigate = useNavigate();
   // Use company data from props
   const gradients = [
     'bg-gradient-to-r from-orange-200 to-orange-100',
@@ -15,6 +17,17 @@ const CompanyCard = ({ company, index }) => {
   
   const gradient = gradients[index % gradients.length];
   
+  const handleNavigateToPortfolio = () => {
+    // Navigate to the company's portfolio page with companyId as parameter
+    navigate(`/client/construction-portfolio/${company._id}`, { 
+      state: { 
+        company,
+        // Add additional data that might be useful for the portfolio page
+        source: 'allCompanies'
+      }
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -28,7 +41,8 @@ const CompanyCard = ({ company, index }) => {
       }}
       viewport={{ once: true }}
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+      onClick={handleNavigateToPortfolio} // Add click handler to the entire card
+      className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
     >
       {/* Gradient header */}
       <div className={`h-32 relative ${gradient}`}>
@@ -62,6 +76,10 @@ const CompanyCard = ({ company, index }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-1 rounded-full text-sm transition-colors"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering the parent div's onClick
+              handleNavigateToPortfolio();
+            }}
           >
             Portfolio
           </motion.button>

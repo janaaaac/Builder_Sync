@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronDown, ArrowRight, Mail, Phone, MapPin, Plus, X, ChevronLeft, ChevronRight, Edit3, Trash2, AlertTriangle, Save } from 'lucide-react';
+import { ChevronDown, ArrowRight, Mail, Phone, MapPin, Plus, X, ChevronLeft, ChevronRight, Edit3, Trash2, AlertTriangle, Save, CheckCircle2, FileText, ListChecks, Image, Users, Clipboard, Building2, AlignLeft } from 'lucide-react';
 
 const ProjectDetails = () => {
   const location = useLocation();
@@ -49,21 +49,21 @@ const ProjectDetails = () => {
   
   // Initialize edited project when project data loads
   useEffect(() => {
-    if (project) {
+    if (project && editedProject === null) {
       setEditedProject(JSON.parse(JSON.stringify(project)));
     }
-  }, [project]);
+  }, [project, editedProject]);
+  
   
   // Handle edit mode toggle - modified to show modal instead of inline editing
   const toggleEditMode = () => {
     if (isEditing) {
-      // Revert changes if canceling
       setEditedProject(JSON.parse(JSON.stringify(project)));
       setShowEditModal(false);
     } else {
-      // When starting edit mode, show the modal
+      setEditedProject(JSON.parse(JSON.stringify(project))); // <--- Add this here
       setShowEditModal(true);
-      setActiveEditSection('details'); // Default section
+      setActiveEditSection('details');
     }
     setIsEditing(!isEditing);
     setSaveSuccess(false);
@@ -72,6 +72,7 @@ const ProjectDetails = () => {
   
   // Handle input changes
   const handleInputChange = (field, value) => {
+    console.log(`Field: ${field}, Value: ${value}`);
     setEditedProject(prev => ({
       ...prev,
       [field]: value
@@ -464,6 +465,8 @@ const ProjectDetails = () => {
     return "125M";
   }, [project]);
 
+
+
   // Define handler functions using useCallback
   const openModal = useCallback((index) => {
     setModalImageIndex(index);
@@ -758,164 +761,233 @@ const ProjectDetails = () => {
     if (!showEditModal) return null;
     
     return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto p-4">
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="bg-orange-500 text-white p-4 flex justify-between items-center">
-            <h2 className="text-xl font-bold">Edit Project: {editedProject?.title}</h2>
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 overflow-y-auto p-4 backdrop-blur-sm transition-all duration-300">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-fadeIn">
+          {/* Enhanced header with gradient and subtle pattern */}
+          <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 text-white p-6 flex justify-between items-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.2)_0%,transparent_20%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.2)_0%,transparent_20%)]"></div>
+            
+            <div className="flex items-center space-x-3 relative z-10">
+              <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                <Edit3 className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">{editedProject?.title || "Untitled Project"}</h2>
+                <p className="text-white/80 text-sm">Edit project details and information</p>
+              </div>
+            </div>
+            
             <button 
               onClick={() => {
                 setShowEditModal(false);
                 setIsEditing(false);
                 setEditedProject(JSON.parse(JSON.stringify(project)));
               }}
-              className="text-white hover:text-gray-200"
+              className="text-white/80 hover:text-white hover:bg-white/20 transition-all p-2 rounded-full"
+              title="Close editor"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
           
-          {/* Tab Navigation */}
-          <div className="bg-gray-100 flex overflow-x-auto">
-            <button 
-              className={`px-6 py-3 font-medium ${activeEditSection === 'details' ? 'bg-white text-orange-500 border-t-2 border-orange-500' : 'text-gray-700 hover:bg-gray-50'}`}
-              onClick={() => setActiveEditSection('details')}
-            >
-              Details
-            </button>
-            <button 
-              className={`px-6 py-3 font-medium ${activeEditSection === 'features' ? 'bg-white text-orange-500 border-t-2 border-orange-500' : 'text-gray-700 hover:bg-gray-50'}`}
-              onClick={() => setActiveEditSection('features')}
-            >
-              Features
-            </button>
-            <button 
-              className={`px-6 py-3 font-medium ${activeEditSection === 'images' ? 'bg-white text-orange-500 border-t-2 border-orange-500' : 'text-gray-700 hover:bg-gray-50'}`}
-              onClick={() => setActiveEditSection('images')}
-            >
-              Images
-            </button>
-            <button 
-              className={`px-6 py-3 font-medium ${activeEditSection === 'team' ? 'bg-white text-orange-500 border-t-2 border-orange-500' : 'text-gray-700 hover:bg-gray-50'}`}
-              onClick={() => setActiveEditSection('team')}
-            >
-              Team
-            </button>
+          {/* Improved Tab Navigation with animated indicator */}
+          <div className="bg-gray-50 flex border-b border-gray-200 relative">
+            <div className="flex overflow-x-auto hide-scrollbar">
+              {[
+                {id: 'details', label: 'Basic Details', icon: <FileText className="w-4 h-4 mr-2" />},
+                {id: 'features', label: 'Features', icon: <ListChecks className="w-4 h-4 mr-2" />},
+                {id: 'images', label: 'Project Gallery', icon: <Image className="w-4 h-4 mr-2" />},
+                {id: 'team', label: 'Team Members', icon: <Users className="w-4 h-4 mr-2" />}
+              ].map(tab => (
+                <button 
+                  key={tab.id}
+                  className={`px-6 py-4 font-medium flex items-center whitespace-nowrap transition-all
+                    ${activeEditSection === tab.id 
+                      ? 'text-orange-600' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
+                  onClick={() => setActiveEditSection(tab.id)}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Animated underline indicator */}
+            <div className="absolute bottom-0 left-0 h-0.5 bg-orange-500 transition-all duration-300"
+                 style={{
+                   width: activeEditSection === 'details' ? '120px' : 
+                          activeEditSection === 'features' ? '100px' : 
+                          activeEditSection === 'images' ? '130px' : '140px',
+                   transform: `translateX(${
+                     activeEditSection === 'details' ? '0' :
+                     activeEditSection === 'features' ? '120px' :
+                     activeEditSection === 'images' ? '220px' : '350px'
+                   })`
+                 }}></div>
           </div>
           
-          {/* Form Content - scrollable */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {/* Details Section */}
+          {/* Form Content with custom scrollbar */}
+          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
             {activeEditSection === 'details' && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Project Title</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={editedProject?.title || ""}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
-                    />
+              <div className="space-y-8">
+                <div className="bg-orange-50 border border-orange-100 p-5 rounded-xl flex items-start">
+                  <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+                    <Clipboard className="w-5 h-5 text-orange-500" />
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={editedProject?.location || ""}
-                      onChange={(e) => handleInputChange('location', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                    <select
-                      className="w-full p-2 border rounded"
-                      value={editedProject?.category || ""}
-                      onChange={(e) => handleInputChange('category', e.target.value)}
-                    >
-                      <option value="">Select category</option>
-                      <option value="residential">Residential</option>
-                      <option value="commercial">Commercial</option>
-                      <option value="industrial">Industrial</option>
-                      <option value="infrastructure">Infrastructure</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Completion Year</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={editedProject?.completionYear || ""}
-                      onChange={(e) => handleInputChange('completionYear', e.target.value)}
-                    />
+                    <h3 className="font-medium text-gray-900">Project Information</h3>
+                    <p className="text-sm text-gray-600">Enter the basic details about your construction project.</p>
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Description</label>
-                  <textarea
-                    className="w-full p-2 border rounded h-32"
-                    value={editedProject?.description || ""}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                  ></textarea>
+                {/* Structured form with card-based sections */}
+                <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Building2 className="w-5 h-5 mr-2 text-orange-500" />
+                    Project Identity
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Project Title*</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
+                        value={editedProject?.title || ""}
+                        onChange={(e) => handleInputChange('title', e.target.value)}
+                        placeholder="Enter project title"
+                      />
+                      <p className="text-xs text-gray-500">A clear, descriptive name for your project</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Location</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
+                        value={editedProject?.location || ""}
+                        onChange={(e) => handleInputChange('location', e.target.value)}
+                        placeholder="City, Country"
+                      />
+                      <p className="text-xs text-gray-500">Where the project is located</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Category</label>
+                      <select
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
+                        value={editedProject?.category || ""}
+                        onChange={(e) => handleInputChange('category', e.target.value)}
+                      >
+                        <option value="">Select category</option>
+                        <option value="residential">Residential</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="infrastructure">Infrastructure</option>
+                        <option value="institutional">Institutional</option>
+                        <option value="renovation">Renovation</option>
+                        <option value="hospitality">Hospitality</option>
+                        <option value="retail">Retail</option>
+                      </select>
+                      <p className="text-xs text-gray-500">Type of construction project</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Completion Year</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
+                        value={editedProject?.completionYear || ""}
+                        onChange={(e) => handleInputChange('completionYear', e.target.value)}
+                        placeholder="YYYY"
+                      />
+                      <p className="text-xs text-gray-500">When the project was completed</p>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Area (sq ft)</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={editedProject?.area || ""}
-                      onChange={(e) => handleInputChange('area', e.target.value)}
-                    />
-                  </div>
+                {/* Project Description Section */}
+                <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <AlignLeft className="w-5 h-5 mr-2 text-orange-500" />
+                    Project Description
+                  </h4>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Duration (months)</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={editedProject?.duration || ""}
-                      onChange={(e) => handleInputChange('duration', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={editedProject?.bedrooms || ""}
-                      onChange={(e) => handleInputChange('bedrooms', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={editedProject?.bathrooms || ""}
-                      onChange={(e) => handleInputChange('bathrooms', e.target.value)}
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Detailed Overview</label>
+                    <textarea
+                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm h-40"
+                      value={editedProject?.description || ""}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      placeholder="Describe the project scope, unique features, challenges overcome..."
+                    ></textarea>
+                    <p className="text-xs text-gray-500 mt-2">A comprehensive description helps clients understand the project better</p>
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Price/Investment</label>
-                  <div className="flex items-center">
-                    <span className="bg-gray-100 px-3 py-2 border border-r-0 rounded-l">LKR</span>
-                    <input
-                      type="text"
-                      className="flex-1 p-2 border rounded-r"
-                      value={editedProject?.price || ""}
-                      onChange={(e) => handleInputChange('price', e.target.value)}
-                    />
+                {/* Project Specifications Section */}
+                <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                  <h4 className="text-lg font-medium text-gray-900 mb-4">Project Specifications</h4>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Area (sq ft)</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        value={editedProject?.area || ""}
+                        onChange={(e) => handleInputChange('area', e.target.value)}
+                        placeholder="Area"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Duration (months)</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        value={editedProject?.duration || ""}
+                        onChange={(e) => handleInputChange('duration', e.target.value)}
+                        placeholder="Duration"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Bedrooms</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        value={editedProject?.bedrooms || ""}
+                        onChange={(e) => handleInputChange('bedrooms', e.target.value)}
+                        placeholder="Bedrooms"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Bathrooms</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        value={editedProject?.bathrooms || ""}
+                        onChange={(e) => handleInputChange('bathrooms', e.target.value)}
+                        placeholder="Bathrooms"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Investment/Price</label>
+                    <div className="flex items-center">
+                      <span className="bg-gray-100 px-4 py-3 border border-r-0 rounded-l-lg text-gray-600">LKR</span>
+                      <input
+                        type="text"
+                        className="flex-1 p-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        value={editedProject?.price || ""}
+                        onChange={(e) => handleInputChange('price', e.target.value)}
+                        placeholder="Project cost/investment"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -923,82 +995,126 @@ const ProjectDetails = () => {
             
             {/* Features Section */}
             {activeEditSection === 'features' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Project Features & Details</h3>
-                  <button
-                    onClick={() => handleAddArrayItem('details', '')}
-                    className="bg-orange-500 text-white px-3 py-1 rounded text-sm flex items-center gap-1"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Feature
-                  </button>
+              <div className="space-y-6">
+                <div className="bg-green-50 border border-green-100 p-5 rounded-xl flex items-start">
+                  <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+                    <ListChecks className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">Project Features</h3>
+                    <p className="text-sm text-gray-600">Add all the key features and selling points of your project.</p>
+                  </div>
                 </div>
                 
-                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                  {(editedProject?.details || []).map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2 bg-gray-50 p-2 rounded">
-                      <input
-                        type="text"
-                        className="flex-1 p-2 border rounded"
-                        value={feature}
-                        onChange={(e) => handleArrayItemChange('details', index, e.target.value)}
-                        placeholder="Enter feature detail"
-                      />
-                      <button 
-                        onClick={() => handleRemoveArrayItem('details', index)}
-                        className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-                        title="Remove feature"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
+                    <h4 className="text-lg font-medium text-gray-900">Project Features & Details</h4>
+                    <button
+                      onClick={() => handleAddArrayItem('details', '')}
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm flex items-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Feature
+                    </button>
+                  </div>
                   
-                  {(editedProject?.details || []).length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      No features added yet. Click "Add Feature" to add some.
-                    </div>
-                  )}
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                    {(editedProject?.details || []).length > 0 ? (
+                      (editedProject?.details || []).map((feature, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-gray-50 p-3 rounded-md border border-gray-100">
+                          <div className="text-green-500 flex-shrink-0">
+                            <CheckCircle2 className="w-5 h-5" />
+                          </div>
+                          <input
+                            type="text"
+                            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                            value={feature}
+                            onChange={(e) => handleArrayItemChange('details', index, e.target.value)}
+                            placeholder="Enter project feature or detail"
+                          />
+                          <button 
+                            onClick={() => handleRemoveArrayItem('details', index)}
+                            className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors flex-shrink-0"
+                            title="Remove feature"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                        <div className="mb-2">No features added yet.</div>
+                        <button
+                          onClick={() => handleAddArrayItem('details', 'New project feature')}
+                          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add First Feature
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
             
             {/* Images Section */}
             {activeEditSection === 'images' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Project Images</h3>
-                  <button
-                    onClick={() => setShowImageUploadModal(true)}
-                    className="bg-orange-500 text-white px-3 py-1 rounded text-sm flex items-center gap-1"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Upload Images
-                  </button>
+              <div className="space-y-6">
+                <div className="bg-blue-50 border border-blue-100 p-5 rounded-xl flex items-start">
+                  <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+                    <Image className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">Project Gallery</h3>
+                    <p className="text-sm text-gray-600">Upload and manage images of your construction project.</p>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {(editedProject?.images || []).map((image, index) => (
-                    <div key={index} className="relative group">
-                      <img 
-                        src={image}
-                        alt={`Project image ${index + 1}`}
-                        className="w-full h-40 object-cover rounded"
-                      />
-                      <button
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove image"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
+                    <h4 className="text-lg font-medium text-gray-900">Project Images</h4>
+                    <button
+                      onClick={() => setShowImageUploadModal(true)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm flex items-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Upload Images
+                    </button>
+                  </div>
                   
-                  {(editedProject?.images || []).length === 0 && (
-                    <div className="col-span-full text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
-                      No images added yet. Click "Upload Images" to add some.
+                  {(editedProject?.images || []).length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {(editedProject?.images || []).map((image, index) => (
+                        <div key={index} className="relative group rounded-lg overflow-hidden border border-gray-200">
+                          <img 
+                            src={image}
+                            alt={`Project image ${index + 1}`}
+                            className="w-full h-40 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                            <button
+                              onClick={() => handleRemoveImage(index)}
+                              className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                              title="Remove image"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                      <Image className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                      <p className="mb-2">No images added yet.</p>
+                      <button
+                        onClick={() => setShowImageUploadModal(true)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm inline-flex items-center gap-1 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Upload Project Images
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1007,116 +1123,146 @@ const ProjectDetails = () => {
             
             {/* Team Section */}
             {activeEditSection === 'team' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Project Team</h3>
-                  <button
-                    onClick={handleAddTeamMember}
-                    className="bg-orange-500 text-white px-3 py-1 rounded text-sm flex items-center gap-1"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Team Member
-                  </button>
+              <div className="space-y-6">
+                <div className="bg-purple-50 border border-purple-100 p-5 rounded-xl flex items-start">
+                  <div className="bg-white p-2 rounded-lg shadow-sm mr-4">
+                    <Users className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">Project Team</h3>
+                    <p className="text-sm text-gray-600">Add team members who worked on this project.</p>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(editedProject?.team || []).map((member, index) => (
-                    <div key={index} className="bg-white border rounded-lg p-4 relative">
-                      <button 
-                        onClick={() => handleRemoveTeamMember(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
-                        title="Remove team member"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                      
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full overflow-hidden">
-                          <img 
-                            src={member.image || "https://via.placeholder.com/150"}
-                            alt={member.fullName || "Team member"}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        
-                        <div className="flex-1 space-y-2">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500">Full Name</label>
-                            <input 
-                              type="text"
-                              className="w-full p-1 border rounded"
-                              value={member.fullName || ""}
-                              onChange={(e) => handleUpdateTeamMember(index, 'fullName', e.target.value)}
-                              placeholder="Full Name"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500">Job Role</label>
-                            <input 
-                              type="text"
-                              className="w-full p-1 border rounded"
-                              value={member.jobRole || ""}
-                              onChange={(e) => handleUpdateTeamMember(index, 'jobRole', e.target.value)}
-                              placeholder="Job Role"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500">Image URL</label>
-                            <input 
-                              type="text"
-                              className="w-full p-1 border rounded"
-                              value={member.image || ""}
-                              onChange={(e) => handleUpdateTeamMember(index, 'image', e.target.value)}
-                              placeholder="Image URL"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
+                    <h4 className="text-lg font-medium text-gray-900">Team Members</h4>
+                    <button
+                      onClick={handleAddTeamMember}
+                      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm flex items-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Team Member
+                    </button>
+                  </div>
                   
-                  {(editedProject?.team || []).length === 0 && (
-                    <div className="col-span-full text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
-                      No team members added yet. Click "Add Team Member" to add some.
-                    </div>
-                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {(editedProject?.team || []).length > 0 ? (
+                      (editedProject?.team || []).map((member, index) => (
+                        <div key={index} className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 relative">
+                          <button 
+                            onClick={() => handleRemoveTeamMember(index)}
+                            className="absolute top-3 right-3 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                            title="Remove team member"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          
+                          <div className="flex items-center gap-4">
+                            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
+                              <img 
+                                src={member.image || "https://via.placeholder.com/150"}
+                                alt={member.fullName || "Team member"}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            
+                            <div className="flex-1 space-y-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Full Name</label>
+                                <input 
+                                  type="text"
+                                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                                  value={member.fullName || ""}
+                                  onChange={(e) => handleUpdateTeamMember(index, 'fullName', e.target.value)}
+                                  placeholder="Full Name"
+                                />
+                              </div>
+                              
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Job Role</label>
+                                <input 
+                                  type="text"
+                                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                                  value={member.jobRole || ""}
+                                  onChange={(e) => handleUpdateTeamMember(index, 'jobRole', e.target.value)}
+                                  placeholder="Job Role"
+                                />
+                              </div>
+                              
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Image URL</label>
+                                <input 
+                                  type="text"
+                                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                                  value={member.image || ""}
+                                  onChange={(e) => handleUpdateTeamMember(index, 'image', e.target.value)}
+                                  placeholder="Image URL"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                        <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                        <p className="mb-2">No team members added yet.</p>
+                        <button
+                          onClick={handleAddTeamMember}
+                          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Team Member
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
           </div>
           
-          {/* Footer with actions */}
-          <div className="bg-gray-50 p-4 flex justify-end gap-3 border-t">
+          {/* Enhanced footer with better button styling */}
+          <div className="bg-gray-50 p-6 flex justify-between gap-3 border-t border-gray-200">
             <button 
-              onClick={() => {
-                setShowEditModal(false);
-                setIsEditing(false);
-                setEditedProject(JSON.parse(JSON.stringify(project)));
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              disabled={saveLoading}
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2.5 bg-white border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2 shadow-sm"
             >
-              Cancel
+              <Trash2 className="w-4 h-4" />
+              Delete Project
             </button>
-            <button 
-              onClick={saveProjectChanges}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2"
-              disabled={saveLoading}
-            >
-              {saveLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Changes
-                </>
-              )}
-            </button>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  setShowEditModal(false);
+                  setIsEditing(false);
+                  setEditedProject(JSON.parse(JSON.stringify(project)));
+                }}
+                className="px-5 py-2.5 border border-gray-300 bg-white rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm font-medium"
+                disabled={saveLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={saveProjectChanges}
+                className="px-6 py-2.5 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg hover:from-orange-700 hover:to-orange-600 transition-colors flex items-center gap-2 shadow-sm font-medium"
+                disabled={saveLoading}
+              >
+                {saveLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1314,61 +1460,105 @@ const ProjectDetails = () => {
       {/* Project Description */}
       <div className="p-8 bg-white" id="description">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6">Project Overview</h2>
+          <h2 className="text-3xl font-bold mb-6 flex items-center">
+            <span className="bg-orange-100 text-orange-500 p-1 rounded-md mr-3">
+              <ArrowRight className="w-5 h-5" />
+            </span>
+            Project Overview
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2">
               {isEditing ? (
-                <textarea
-                  className="w-full p-4 border rounded-lg mb-6 h-40"
-                  value={editedProject?.description || ""}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Project description..."
-                ></textarea>
-              ) : (
-                <p className="text-gray-700 mb-6 leading-relaxed">
-                  {projectDescription.description}
-                </p>
-              )}
-              
-              <h3 className="text-xl font-bold mb-4">Key Features</h3>
-              
-              {isEditing ? (
-                <div className="space-y-2 mb-4">
-                  {(editedProject?.details || []).map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        className="w-full p-2 border rounded"
-                        value={feature}
-                        onChange={(e) => handleArrayItemChange('details', index, e.target.value)}
-                      />
-                      <button 
-                        onClick={() => handleRemoveArrayItem('details', index)}
-                        className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => handleAddArrayItem('details', '')}
-                    className="mt-2 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
-                  >
-                    Add Feature
-                  </button>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Project Description</label>
+                  <textarea
+                    className="w-full p-4 border rounded-lg h-40 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                    value={editedProject?.description || ""}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Describe the project in detail including scope, challenges, and solutions..."
+                  ></textarea>
                 </div>
               ) : (
-                <ul className="space-y-2">
-                  {projectDescription.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <span className="text-orange-500 font-bold">•</span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="bg-gray-50 p-6 rounded-lg border-l-4 border-orange-500 mb-6">
+                  <p className="text-gray-700 leading-relaxed">
+                    {projectDescription.description}
+                  </p>
+                </div>
               )}
+              
+              <div className="bg-white rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold flex items-center">
+                    <span className="bg-green-100 text-green-600 p-1 rounded-md mr-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </span>
+                    Key Features & Details
+                  </h3>
+                  
+                  {isEditing && (
+                    <button
+                      onClick={() => handleAddArrayItem('details', '')}
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Feature
+                    </button>
+                  )}
+                </div>
+                
+                {isEditing ? (
+                  <div className="space-y-2 mb-4 bg-gray-50 p-4 rounded-lg">
+                    {(editedProject?.details || []).length > 0 ? (
+                      (editedProject?.details || []).map((feature, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-white p-3 rounded-md shadow-sm">
+                          <div className="text-green-500 flex-shrink-0">
+                            <CheckCircle2 className="w-5 h-5" />
+                          </div>
+                          <input
+                            type="text"
+                            className="flex-1 p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                            value={feature}
+                            onChange={(e) => handleArrayItemChange('details', index, e.target.value)}
+                            placeholder="Enter project feature or detail"
+                          />
+                          <button 
+                            onClick={() => handleRemoveArrayItem('details', index)}
+                            className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors flex-shrink-0"
+                            title="Remove feature"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <div className="mb-2">No features added yet.</div>
+                        <button
+                          onClick={() => handleAddArrayItem('details', 'New project feature')}
+                          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add First Feature
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {projectDescription.features.map((feature, index) => (
+                      <div key={index} className="flex items-start gap-2 bg-gray-50 p-3 rounded-lg">
+                        <div className="text-green-500 mt-0.5 flex-shrink-0">
+                          <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <span className="text-gray-700">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            
+
+            {/* Right sidebar - Project details */}
             <div className="bg-gray-50 p-6 rounded-2xl">
               <h3 className="text-xl font-bold mb-4">Project Details</h3>
               <div className="space-y-4">
