@@ -5,6 +5,10 @@ const companyController = require("../controllers/companyController");
 const { uploadCompanyFields } = require("../utils/uploadCompany");
 const requireAuth = require('../middleware/requireAuth');
 const requireRole = require('../middleware/requireRole');
+const Company = require("../models/Company");
+const Client = require("../models/Client");
+const Staff = require("../models/Staff");
+const Proposal = require("../models/Proposal");
 
 // Apply auth middleware to all company routes
 router.use(requireAuth); // First verify token
@@ -32,5 +36,6 @@ router.delete("/:id", companyController.deleteCompany);
 
 // Add this route for company profile (must be after requireAuth and requireRole)
 router.get('/profile', requireAuth, requireRole('company'), companyController.getCompanyProfile);
+
 
 module.exports = router;

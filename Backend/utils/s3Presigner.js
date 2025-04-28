@@ -1,6 +1,7 @@
-const { S3Client, GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, GetObjectCommand, HeadObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 require('dotenv').config();
+// const AWS = require("aws-sdk");
 
 // Initialize S3 client
 const s3Client = new S3Client({
@@ -10,6 +11,12 @@ const s3Client = new S3Client({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   }
 });
+
+// const s3 = new AWS.S3({
+//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+//   region: process.env.AWS_REGION,
+// });
 
 // Debug mode - set to true to get more verbose logging
 const DEBUG = process.env.DEBUG_S3 === 'true';
@@ -159,10 +166,28 @@ const addPresignedUrlsToClient = async (client) => {
   return clientObj;
 };
 
+async function getPresignedUrl(fileName, fileType) {
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: `chat/${fileName}`,
+    ContentType: fileType,
+  };
+
+  try {
+    const command = new PutObjectCommand(params);
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 }); // 5 minutes
+    return presignedUrl;
+  } catch (error) {
+    console.error("Error generating presigned URL:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   generatePresignedUrl,
   generatePresignedUrlFromS3Url,
   extractS3Key,
   checkFileExists,
-  addPresignedUrlsToClient
+  addPresignedUrlsToClient,
+  getPresignedUrl
 };

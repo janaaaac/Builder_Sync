@@ -15,7 +15,7 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5001";
 
-const StaffSidebar = () => {
+const StaffSidebar = ({ onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState("Dashboard");
   const navigate = useNavigate();
@@ -85,7 +85,11 @@ const StaffSidebar = () => {
   }, [navigate]);
 
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    setIsCollapsed((prev) => {
+      const newState = !prev;
+      if (onCollapseChange) onCollapseChange(newState);
+      return newState;
+    });
   };
 
   const handleMenuClick = (item) => {
@@ -114,6 +118,9 @@ const StaffSidebar = () => {
         break;
       case "Reports":
         navigate('/staff-reports');
+        break;
+      case "Chat":
+        navigate('/staff-chat');
         break;
       default:
         break;
@@ -255,6 +262,7 @@ const StaffSidebar = () => {
             { name: "Projects", icon: Note },
             { name: "Tasks", icon: Task },
             { name: "Calendar", icon: Calendar },
+            { name: "Chat", icon: MessageNotif },
             { name: "Documents", icon: DocumentText },
             { name: "Team", icon: Profile2User },
             { name: "Reports", icon: StatusUp },

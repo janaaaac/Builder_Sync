@@ -24,6 +24,11 @@ const StaffSchema = new mongoose.Schema({
     type: Boolean, 
     default: true // Set to false if staff need manual approval
   },
+  client: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Client',
+    required: false // Only set if staff is assigned to a client
+  }
 });
 
 // Hash password before saving

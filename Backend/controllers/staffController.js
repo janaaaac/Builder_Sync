@@ -350,3 +350,22 @@ exports.deleteStaff = async (req, res) => {
     });
   }
 };
+
+// Fetch staff by clientId (admin only)
+exports.getStaffByClient = async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const staffMembers = await Staff.find({ client: clientId }).select('-password');
+    res.status(200).json({
+      success: true,
+      data: staffMembers
+    });
+  } catch (error) {
+    console.error("Get staff by client error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};

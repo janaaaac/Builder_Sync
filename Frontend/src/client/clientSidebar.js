@@ -78,10 +78,23 @@ const ClientSidebar = ({ onCollapseChange }) => {
         
         // Log the specific profile picture URL for debugging
         console.log("Profile picture URL from API:", profileData.profilePicture);
+        console.log("Client Name from API:", profileData.fullName);
+
+        // Extract name with better fallback logic
+        let clientName = "Client User";
+        
+        // Try to get the name from different possible fields
+        if (profileData.fullName && profileData.fullName.trim() !== "") {
+          clientName = profileData.fullName;
+        } else if (profileData.name && profileData.name.trim() !== "") {
+          clientName = profileData.name;
+        } else if (profileData.username && profileData.username.trim() !== "") {
+          clientName = profileData.username;
+        }
 
         // Set client data with proper fallbacks
         setClientData({
-          fullName: profileData.fullName || profileData.username || "Client User",
+          fullName: clientName,
           email: profileData.email || "No email available",
           profilePicture: profileData.profilePicture || DefaultAvatar,
           username: profileData.username || "",
@@ -185,6 +198,9 @@ const ClientSidebar = ({ onCollapseChange }) => {
         break;
       case "Settings":
         navigate('/client-profile');
+        break;
+      case "Chat":
+        navigate('/chat');
         break;
       default:
         // For menu items still under development
@@ -317,6 +333,7 @@ const ClientSidebar = ({ onCollapseChange }) => {
             { name: "Projects", icon: Note },
             { name: "Documents", icon: DocumentText },
             { name: "Settings", icon: Setting2 },
+            { name: "Chat", icon: DocumentText },
           ].map((item) => (
             <li
               key={item.name}

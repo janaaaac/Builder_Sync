@@ -8,6 +8,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const multerS3 = require('multer-s3');
+const { getPresignedUrl } = require("../utils/s3Presigner");
 
 // Initialize S3 client
 const s3Client = new S3Client({
@@ -189,6 +190,23 @@ router.post('/sign-url', async (req, res) => {
   }
 });
 
+// Endpoint to generate a presigned URL for file uploads
+router.post("/getPresignedUrl", async (req, res) => {
+  const { fileName, fileType } = req.body;
+
+  if (!fileName || !fileType) {
+    return res.status(400).json({ error: "Missing fileName or fileType" });
+  }
+
+  try {
+    const presignedUrl = await getPresignedUrl(fileName, fileType);
+    res.json({ presignedUrl });
+  } catch (error) {
+    console.error("Error generating presigned URL:", error);
+    res.status(500).json({ error: "Failed to generate presigned URL" });
+  }
+});
+
 // Set up multer storage with S3
 const upload = multer({
   storage: multerS3({
@@ -204,7 +222,7 @@ const upload = multer({
     },
     contentType: multerS3.AUTO_CONTENT_TYPE
   }),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 5MB limit
   fileFilter: function (req, file, cb) {
     // Accept images only
     if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {

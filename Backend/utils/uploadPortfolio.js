@@ -38,7 +38,7 @@ const upload = multer({
       cb(null, 'portfolio/' + Date.now().toString() + '-' + file.originalname);
     }
   }),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB limit
   fileFilter: fileFilter
 });
 

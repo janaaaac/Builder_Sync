@@ -14,7 +14,7 @@ import {
 } from "iconsax-react";
 import axios from "axios";
 
-const CompanySidebar = () => {
+const CompanySidebar = ({ onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState("Dashboard");
   const navigate = useNavigate();
@@ -113,7 +113,13 @@ const CompanySidebar = () => {
   }, [navigate]);
 
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    
+    // Notify parent component about the change if callback exists
+    if (onCollapseChange) {
+      onCollapseChange(newCollapsedState);
+    }
   };
 
   const handleMenuClick = (item) => {
@@ -134,7 +140,15 @@ const CompanySidebar = () => {
       navigate('/proposal-management');
       return;
     }
-  
+    if (item === "Dashboard") {
+      navigate('/company-dashboard');
+      return;
+    }
+    if (item === "chat") {
+      // Navigate to the company chat page
+      navigate('/company-chat');
+      return;
+    }
     if (item === "Portfolio") {
       // Always check the latest value of portfolioComplete
       if (portfolioComplete === true) {
@@ -278,7 +292,7 @@ const CompanySidebar = () => {
             { name: "Portfolio", icon: Gallery }, // New Portfolio menu item
             { name: "Proposals", icon: DocumentText },
             { name: "Team", icon: Profile2User },
-            { name: "Financials", icon: DollarSquare },
+            { name: "chat", icon: MessageNotif },
             { name: "Documents", icon: Folder },
             { name: "Reports", icon: StatusUp },
             { name: "Settings", icon: Setting2 },

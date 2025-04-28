@@ -5,6 +5,9 @@ const companyController = require('../controllers/companyController');
 const { uploadFields } = require('../utils/upload');
 const requireAuth = require('../middleware/requireAuth');
 const requireRole = require('../middleware/requireRole');
+const Client = require("../models/Client");
+const Company = require("../models/Company");
+const Proposal = require("../models/Proposal");
 
 // Create a new client with file upload handling
 router.post('/create', uploadFields, clientController.createClient);
@@ -35,5 +38,6 @@ router.put('/:id', uploadFields, clientController.updateClient);
 
 // Delete a client (no auth required)
 router.delete('/:id', clientController.deleteClient);
+
 
 module.exports = router;

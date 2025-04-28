@@ -38,6 +38,12 @@ import ClientProjectDetails from './client/ClientProjectDetails'; // Add this im
 import ProjectProposalForm from './client/ProjectProposalForm';
 import ProposalManagement from './company/ProposalManagement';
 
+import CompanyChat from './company/CompanyChat';
+import StaffChat from './Staff/StaffChat';
+import ChatSystem from './Chat/ChatSystem';
+import ClientChat from './client/ClientChat';
+
+
 function App() {
   return (
     <BrowserRouter>
@@ -77,10 +83,9 @@ function App() {
         <Route path="/staff-dashboard" element={<StaffDashboard />} />
         <Route path="/staff-settings" element={<StaffSettings />} />
         <Route path="/proposal-management" element={<ProposalManagement />} />
-
-        
-
-        
+        <Route path="/chat" element={<ClientChat />} />
+        <Route path="/company-chat" element={<CompanyChat />} />
+        <Route path="/staff-chat" element={<StaffChat />} />
 
         {/* Portfolio routes */}
         <Route path="/portfolio-setup-test" element={<PortfolioProfileSetup />} />

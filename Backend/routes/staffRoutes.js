@@ -4,6 +4,10 @@ const staffController = require("../controllers/staffController");
 const { uploadStaffFiles } = require("../utils/staffUpload");
 const requireAuth = require('../middleware/requireAuth');
 const requireRole = require('../middleware/requireRole');
+const Staff = require('../models/Staff');
+const Company = require('../models/Company');
+const Client = require('../models/Client');
+const Proposal = require('../models/Proposal');
 
 // Routes that require company role (admin operations)
 router.post("/create", 
@@ -27,6 +31,12 @@ router.delete("/:id",
   staffController.deleteStaff
 );
 
+// Fetch staff by clientId (admin only)
+router.get("/by-client/:clientId",
+  requireAuth,
+  requireRole("admin"),
+  staffController.getStaffByClient
+);
 
 // Staff-specific routes (require staff role)
 // These routes are for staff members to manage their own profiles
