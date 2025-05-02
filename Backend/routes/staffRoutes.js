@@ -67,4 +67,17 @@ router.post("/first-login",
   staffController.firstLoginSetup
 );
 
+// Get all staff for the logged-in company
+router.get('/', requireAuth, requireRole('company'), async (req, res) => {
+  try {
+    const staff = await Staff.find({ company: req.user._id }).select('fullName email role profilePicture');
+    res.json({ success: true, data: staff });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error fetching staff', error: err.message });
+  }
+});
+
+// Get staff statistics for dashboard
+router.get('/stats', requireAuth, requireRole('company'), staffController.getStaffStats);
+
 module.exports = router;

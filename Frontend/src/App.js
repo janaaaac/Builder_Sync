@@ -42,6 +42,14 @@ import CompanyChat from './company/CompanyChat';
 import StaffChat from './Staff/StaffChat';
 import ChatSystem from './Chat/ChatSystem';
 import ClientChat from './client/ClientChat';
+import CompanyProjects from './company/CompanyProjects';
+import ClientProjects from './client/ClientProjects';
+import StaffProjects from './Staff/StaffProjects';
+import ClientCalendar from './client/ClientCalendar';
+import CompanyCalendar from './company/CompanyCalendar';
+import CompanyDashboard from './company/CompanyDashboard';
+import StaffNotifications from './Staff/StaffNotifications';
+import ClientNotifications from './client/ClientNotifications';
 
 
 function App() {
@@ -74,9 +82,13 @@ function App() {
         <Route path="/client-project-details" element={<ClientProjectDetails />} />
         <Route path="/client-project-details/:projectId" element={<ClientProjectDetails />} />
         <Route path="/send-proposal" element={<ProjectProposalForm />} />
+        <Route path="/client-projects" element={<ClientProjects />} />
+        <Route path="/client-calendar" element={<ClientCalendar />} />
+        <Route path="/client/notifications" element={<ClientNotifications />} />
 
         {/* Company routes */}
         <Route path="/company-dashboard" element={<CompanySidebar />} />
+        <Route path="/company-d" element={<CompanyDashboard />} />
         <Route path="/company-profile" element={<CompanySettings />} />
         <Route path="/staff-management" element={<StaffManagement />} />
         <Route path="/first-login" element={<FirstLoginSetup />} />
@@ -86,6 +98,9 @@ function App() {
         <Route path="/chat" element={<ClientChat />} />
         <Route path="/company-chat" element={<CompanyChat />} />
         <Route path="/staff-chat" element={<StaffChat />} />
+        <Route path="/company-projects" element={<CompanyProjects />} />
+        <Route path="/company-calender" element={<CompanyCalendar />} />
+        <Route path="/staff/notifications" element={<StaffNotifications />} />
 
         {/* Portfolio routes */}
         <Route path="/portfolio-setup-test" element={<PortfolioProfileSetup />} />
@@ -93,6 +108,8 @@ function App() {
         <Route path="/portfolio-profile" element={<ConstructionPortfolioProfile />} /> {/* Keep for backward compatibility */}
         <Route path="/project-details" element={<ProjectDetails />} />
         <Route path="/project-details/:projectId" element={<ProjectDetails />} /> {/* Add this route */}
+
+        <Route path="/staff-projects" element={<StaffProjects />} />
 
        
 

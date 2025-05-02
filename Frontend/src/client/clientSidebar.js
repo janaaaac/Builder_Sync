@@ -202,6 +202,9 @@ const ClientSidebar = ({ onCollapseChange }) => {
       case "Chat":
         navigate('/chat');
         break;
+      case"Calendar":
+        navigate('/client-calendar');
+        break;
       default:
         // For menu items still under development
         navigate(`/client-${item.toLowerCase()}`);
@@ -334,6 +337,7 @@ const ClientSidebar = ({ onCollapseChange }) => {
             { name: "Documents", icon: DocumentText },
             { name: "Settings", icon: Setting2 },
             { name: "Chat", icon: DocumentText },
+            { name: "Calendar", icon: DocumentText },
           ].map((item) => (
             <li
               key={item.name}

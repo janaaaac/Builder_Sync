@@ -465,6 +465,25 @@ export default function ClientSettings() {
     return date.toLocaleDateString();
   };
 
+  const handleCreateProject = async (proposalId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(
+        `http://localhost:5001/api/projects/from-proposal/${proposalId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) {
+        toast.success('Project created successfully!');
+        // Optionally update notification/project list here
+      } else {
+        toast.error(res.data.message || 'Failed to create project');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error creating project');
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 font-jakarta">
       {/* Sidebar - with collapse callback */}
@@ -538,7 +557,30 @@ export default function ClientSettings() {
                               alt="Profile" 
                               className="w-32 h-32 object-cover rounded-full border-4 border-orange-100 mb-4"
                               onError={(e) => {
-                                e.target.src = "https://via.placeholder.com/150";
+                                console.log("Image failed to load:", clientData.profilePicture);
+                                e.target.src = "/static/media/default-avatar.png";
+                                // If the default avatar also fails, use an inline SVG
+                                e.target.onerror = () => {
+                                  e.target.onerror = null; // Prevent infinite loop
+                                  e.target.style.display = "none";
+                                  const parent = e.target.parentNode;
+                                  const svgDiv = document.createElement("div");
+                                  svgDiv.className = "w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center";
+                                  svgDiv.innerHTML = `<svg 
+                                    class="w-16 h-16 text-gray-400" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24" 
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path 
+                                      strokeLinecap="round" 
+                                      strokeLinejoin="round" 
+                                      strokeWidth="2" 
+                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                  </svg>`;
+                                  parent.insertBefore(svgDiv, e.target);
+                                };
                               }}
                             />
                           ) : (
@@ -780,6 +822,14 @@ export default function ClientSettings() {
                                     <span className="font-medium">Reason: </span> 
                                     {notification.data.reason}
                                   </p>
+                                )}
+                                {notification.type === 'proposal_approved' && !notification.projectCreated && (
+                                  <button
+                                    onClick={() => handleCreateProject(notification.proposal?._id)}
+                                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                                  >
+                                    Create Project
+                                  </button>
                                 )}
                               </div>
                               <span className="text-xs text-gray-400">{formatRelativeTime(notification.createdAt)}</span>

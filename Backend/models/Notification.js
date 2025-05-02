@@ -6,10 +6,24 @@ const NotificationSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  userType: {
+    type: String,
+    enum: ['Client', 'Company', 'Staff', 'Admin'],
+    required: true
+  },
   type: {
     type: String,
     required: true,
-    enum: ['proposal_approved', 'proposal_rejected', 'message', 'system']
+    enum: [
+      'proposal_approved', 
+      'proposal_rejected', 
+      'message', 
+      'system', 
+      'meeting_invite', 
+      'meeting_update', 
+      'meeting_reminder',
+      'meeting_canceled'
+    ]
   },
   message: {
     type: String,

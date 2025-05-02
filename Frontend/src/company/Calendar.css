@@ -1,0 +1,72 @@
+/* Calendar custom styling */
+
+/* Style the calendar header */
+.fc-header-toolbar {
+  margin-bottom: 1.5em !important;
+}
+
+.fc-toolbar-title {
+  font-size: 1.5em !important;
+  font-weight: 600 !important;
+}
+
+/* Style the today button with orange theme */
+.fc-today-button {
+  background-color: #f97316 !important;
+  border-color: #f97316 !important;
+}
+
+.fc-today-button:disabled {
+  background-color: rgba(249, 115, 22, 0.5) !important;
+  border-color: rgba(249, 115, 22, 0.5) !important;
+}
+
+/* Style the calendar events to match orange theme */
+.fc-event {
+  border-radius: 4px !important;
+  border-left: 4px solid #f97316 !important;
+  background-color: #ffedd5 !important;
+  color: #9a3412 !important;
+  font-weight: 500 !important;
+  padding: 2px 4px !important;
+}
+
+.fc-event-time {
+  font-weight: bold !important;
+}
+
+/* Style the active day */
+.fc-day-today {
+  background-color: #fff7ed !important;
+}
+
+/* Style the buttons */
+.fc-button-primary {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+.fc-button-primary:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.fc-button-primary:not(:disabled).fc-button-active,
+.fc-button-primary:not(:disabled):active {
+  background-color: #f97316 !important;
+  border-color: #f97316 !important;
+  color: white !important;
+}
+
+/* Make the calendar more readable on mobile */
+@media (max-width: 640px) {
+  .fc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.2em !important;
+  }
+}

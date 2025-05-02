@@ -114,24 +114,10 @@ exports.firstLoginSetup = async (req, res) => {
 // Get all staff for a company
 exports.getCompanyStaff = async (req, res) => {
   try {
-    const staffMembers = await Staff.find({ company: req.user._id }).select('-password');
-    
-    // Generate presigned URLs for staff profiles
-    const staffWithUrls = [];
-    for (const staff of staffMembers) {
-      staffWithUrls.push(await generatePresignedUrlsForStaff(staff));
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: staffWithUrls
-    });
-  } catch (error) {
-    console.error("Get company staff error:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Server error" 
-    });
+    const staff = await Staff.find({ company: req.user._id });
+    res.json({ success: true, data: staff });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error fetching staff', error: err.message });
   }
 };
 
@@ -280,6 +266,48 @@ exports.getDashboard = async (req, res) => {
       success: false,
       message: "Failed to fetch dashboard data",
       error: error.message
+    });
+  }
+};
+
+// Get staff statistics for the dashboard
+exports.getStaffStats = async (req, res) => {
+  try {
+    // Only company users should access this endpoint
+    const companyId = req.user._id;
+    
+    // Count all staff for the company
+    const totalStaff = await Staff.countDocuments({ company: companyId });
+    
+    // Count staff by role if needed
+    const architectCount = await Staff.countDocuments({ company: companyId, role: 'ARCHITECT' });
+    const engineerCount = await Staff.countDocuments({ company: companyId, role: 'ENGINEER' });
+    const designerCount = await Staff.countDocuments({ company: companyId, role: 'DESIGNER' });
+    const managerCount = await Staff.countDocuments({ company: companyId, role: 'PROJECT_MANAGER' });
+    
+    // Get company staffing limit from company model if it exists
+    const company = await Company.findById(companyId);
+    const staffLimit = company?.staffLimit || 120; // Default to 120 if not set
+    
+    res.json({
+      success: true,
+      data: {
+        total: totalStaff,
+        limit: staffLimit,
+        roles: {
+          architects: architectCount,
+          engineers: engineerCount,
+          designers: designerCount,
+          managers: managerCount
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching staff stats:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching staff statistics', 
+      error: err.message 
     });
   }
 };

@@ -6,6 +6,7 @@ import {
   MessageNotif,
   DollarSquare,
   Folder,
+  Calendar,
   StatusUp,
   Setting2,
   Profile2User,
@@ -129,7 +130,7 @@ const CompanySidebar = ({ onCollapseChange }) => {
       return;
     }
     if (item === "Projects") {
-      navigate('/project-showcase');
+      navigate('/company-projects');
       return;
     }
     if (item === "Settings") {
@@ -140,8 +141,12 @@ const CompanySidebar = ({ onCollapseChange }) => {
       navigate('/proposal-management');
       return;
     }
+    if (item === "Calendar") {
+      navigate('/company-calender');
+      return;
+    }
     if (item === "Dashboard") {
-      navigate('/company-dashboard');
+      navigate('/company-d');
       return;
     }
     if (item === "chat") {
@@ -170,7 +175,7 @@ const CompanySidebar = ({ onCollapseChange }) => {
     <div
       className={`fixed h-screen bg-white shadow-lg transition-all duration-300 font-jakarta ${
         isCollapsed ? "w-20" : "w-64"
-      }`}
+      } flex flex-col`}
     >
       {/* Toggle Button */}
       <button
@@ -210,24 +215,17 @@ const CompanySidebar = ({ onCollapseChange }) => {
         )}
       </button>
 
-      {/* Sidebar Header */}
-      <div className="p-6">
+      {/* Sidebar Header - Fixed at top */}
+      <div className="p-6 flex-shrink-0">
         {!isCollapsed && (
           <>
             <h1 className="text-2xl font-bold text-[#EA540C] mb-2 font-aclonica">BuilderSync</h1>
             <div className="h-px bg-gray-100 my-2"></div>
-            {companyData.loading ? (
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-6"></div>
-            ) : (
-              <p className="text-sm text-gray-600 mb-6">
-                {companyData.companyName || "Company Name"}
-              </p>
-            )}
           </>
         )}
         
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#FFEEE8] flex items-center justify-center overflow-hidden">
+        <div className="flex items-center gap-2">
+          <div className={`${isCollapsed ? 'w-10 h-10' : 'w-12 h-12'} rounded-full bg-[#FFEEE8] flex items-center justify-center overflow-hidden flex-shrink-0`}>
             {companyData.loading ? (
               <div className="w-full h-full animate-pulse bg-gray-200"></div>
             ) : (
@@ -274,23 +272,24 @@ const CompanySidebar = ({ onCollapseChange }) => {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-gray-100 my-2"></div>
+      <div className="h-px bg-gray-100 my-2 flex-shrink-0"></div>
 
-      {/* Menu Label */}
+      {/* Menu Label - Fixed */}
       {!isCollapsed && (
-        <div className="px-6 py-2">
+        <div className="px-6 py-2 flex-shrink-0">
           <p className="text-xs text-[#9C9AA5] uppercase font-medium">MAIN</p>
         </div>
       )}
 
-      {/* Sidebar Menu */}
-      <div className="px-4">
+      {/* Scrollable Sidebar Menu */}
+      <div className="px-4 overflow-y-auto flex-grow mb-16">
         <ul className="space-y-1">
           {[
             { name: "Dashboard", icon: Category },
             { name: "Projects", icon: Note },
             { name: "Portfolio", icon: Gallery }, // New Portfolio menu item
             { name: "Proposals", icon: DocumentText },
+            { name: "Calendar", icon: Calendar },
             { name: "Team", icon: Profile2User },
             { name: "chat", icon: MessageNotif },
             { name: "Documents", icon: Folder },
@@ -327,13 +326,13 @@ const CompanySidebar = ({ onCollapseChange }) => {
       </div>
       
       {/* Divider */}
-      <div className="h-px bg-gray-100 my-2"></div>
+      <div className="h-px bg-gray-100 my-2 flex-shrink-0"></div>
 
-      {/* Logout Button */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+      {/* Logout Button - Fixed at bottom */}
+      <div className="px-4 py-4 mt-auto flex-shrink-0">
         <button
           onClick={handleLogout}
-          className="flex items-center text-red-600 hover:text-red-700 transition-colors duration-300"
+          className={`flex items-center justify-${isCollapsed ? 'center' : 'start'} w-full p-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors duration-300`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -349,7 +348,7 @@ const CompanySidebar = ({ onCollapseChange }) => {
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-          {!isCollapsed && <span className="ml-2">Logout</span>}
+          {!isCollapsed && <span className="ml-2 font-medium">Logout</span>}
         </button>
       </div>
     </div>

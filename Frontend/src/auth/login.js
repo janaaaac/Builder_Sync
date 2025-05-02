@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   User, 
   Lock, 
@@ -22,6 +23,7 @@ const LoginPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
   
   // Add this function to handle navigation
   const handleNavigation = (path) => {
@@ -40,6 +42,11 @@ const LoginPage = () => {
       const newErrors = { ...errors };
       delete newErrors[name];
       setErrors(newErrors);
+    }
+    
+    // Clear login error when user starts typing again
+    if (loginError) {
+      setLoginError('');
     }
   };
 
@@ -71,20 +78,69 @@ const LoginPage = () => {
     // Validate form
     if (!validateForm()) return;
 
+    // Clear any previous login errors
+    setLoginError('');
+    
     // Set loading state
     setIsLoading(true);
 
     try {
-      // Simulate login API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Make the actual API call to the backend
+      const response = await axios.post('http://localhost:5001/api/auth/login', {
+        email: formData.email,
+        password: formData.password
+      });
       
-      // Here you would typically handle successful login
-      console.log('Login Successful', formData);
-      
-      // Reset loading state
-      setIsLoading(false);
+      if (response.data.success) {
+        // Store token in localStorage
+        localStorage.setItem('token', response.data.token);
+        
+        // Store user ID in localStorage - this is needed for notifications
+        localStorage.setItem('userId', response.data.user.id);
+        
+        // Store user role
+        localStorage.setItem('userRole', response.data.user.role);
+        
+        // Store other useful user data
+        if (response.data.user.fullName) {
+          localStorage.setItem('userName', response.data.user.fullName);
+        } else if (response.data.user.companyName) {
+          localStorage.setItem('userName', response.data.user.companyName);
+        } else if (response.data.user.username) {
+          localStorage.setItem('userName', response.data.user.username);
+        }
+        
+        console.log('Login Successful', response.data);
+        
+        // Redirect based on user role
+        if (response.data.user.role === 'client') {
+          navigate('/client/dashboard');
+        } else if (response.data.user.role === 'company') {
+          navigate('/company/dashboard');
+        } else if (response.data.user.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (response.data.user.role === 'staff') {
+          // Check if it's first login for staff
+          if (response.data.user.isFirstLogin) {
+            navigate('/staff/first-login');
+          } else {
+            navigate('/staff/dashboard');
+          }
+        }
+      } else {
+        // Handle failed login despite 200 status
+        setLoginError(response.data.message || 'Login failed. Please try again.');
+      }
     } catch (error) {
       console.error('Login Error', error);
+      
+      // Set appropriate error message based on response
+      if (error.response && error.response.data) {
+        setLoginError(error.response.data.message || 'Login failed. Please check your credentials.');
+      } else {
+        setLoginError('Network error. Please try again later.');
+      }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -269,6 +325,12 @@ const LoginPage = () => {
               </>
             )}
           </button>
+          {loginError && (
+            <div className="flex items-center text-red-500 text-sm mt-1">
+              <AlertCircle className="w-4 h-4 mr-2" />
+              {loginError}
+            </div>
+          )}
         </form>
 
         {/* Registration Link */}

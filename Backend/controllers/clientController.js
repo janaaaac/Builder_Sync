@@ -105,8 +105,13 @@ exports.getClientProfile = async (req, res) => {
       console.log("Client not found for ID:", req.user.id);
       return res.status(404).json({ message: "Client not found" });
     }
-
-    console.log("Found client:", client);
+    
+    // Just use the profilePicture field directly without modification
+    // S3 URLs are already complete URLs that don't need modification
+    const profilePictureUrl = client.profilePicture || null;
+    
+    // Log the profile picture URL for debugging
+    console.log("Profile picture URL:", profilePictureUrl);
     
     res.status(200).json({
       success: true,
@@ -114,10 +119,7 @@ exports.getClientProfile = async (req, res) => {
         _id: client._id,
         fullName: client.fullName,
         email: client.email,
-        // Add the full URL to the profile picture if it's not an absolute URL
-        profilePicture: client.profilePicture?.startsWith('http') 
-          ? client.profilePicture 
-          : `${req.protocol}://${req.get('host')}/${client.profilePicture}`,
+        profilePicture: profilePictureUrl,
         username: client.username,
         companyName: client.companyName || "",
         clientType: client.clientType || "individual",

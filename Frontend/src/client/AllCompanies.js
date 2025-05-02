@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ClientSidebar from './clientSidebar';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import NotificationBell from '../components/NotificationBell';
 
 const CompanyCard = ({ company, index }) => {
   const navigate = useNavigate();
@@ -300,6 +301,7 @@ const AllCompanys = () => {
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
+            <NotificationBell userType="client" />
           </div>
         </div>
 

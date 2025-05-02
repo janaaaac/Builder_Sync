@@ -53,6 +53,9 @@ router.delete('/:id', requireAuth, requireRole('client'), proposalController.del
 // Updated to include query parameter for complete client data population
 router.get('/company', requireAuth, requireRole('company'), proposalController.getCompanyProposals);
 
+// Add a new route to get clients with approved proposals
+router.get('/approved-clients', requireAuth, requireRole('company'), proposalController.getClientsWithApprovedProposals);
+
 // Add a new route specifically for getting full client details with proposals
 router.get('/company/complete', requireAuth, requireRole('company'), (req, res, next) => {
   req.populateOptions = {

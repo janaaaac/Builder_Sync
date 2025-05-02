@@ -197,6 +197,33 @@ exports.updateProposalStatus = async (req, res) => {
     }
     
     await proposal.save();
+
+    // Send notification to client if approved
+    if (statusToSave === 'accepted') {
+      const Notification = require('../models/Notification');
+      await Notification.create({
+        userId: proposal.client._id || proposal.client, // handle both populated and unpopulated
+        type: 'proposal_approved',
+        message: `Your proposal "${proposal.projectTitle}" has been approved!`,
+        proposal: proposal._id,
+        data: {
+          proposalId: proposal._id,
+          projectTitle: proposal.projectTitle
+        }
+      });
+
+      // Automatically create a new Project for the client and company
+      const Project = require('../models/Project');
+      await Project.create({
+        title: proposal.projectTitle,
+        description: proposal.projectDescription,
+        client: proposal.client._id || proposal.client,
+        company: proposal.company,
+        proposal: proposal._id,
+        budget: proposal.budget,
+        location: proposal.projectLocation
+      });
+    }
     
     res.status(200).json({
       success: true,
@@ -291,6 +318,66 @@ exports.getCompanyProposals = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error retrieving proposals',
+      error: error.message
+    });
+  }
+};
+
+// Get clients with approved proposals for the company
+exports.getClientsWithApprovedProposals = async (req, res) => {
+  try {
+    const companyId = req.user._id;
+    
+    // Find proposals that have been accepted for this company
+    const approvedProposals = await Proposal.find({ 
+      company: companyId,
+      status: 'accepted' // Use 'accepted' since 'approved' gets mapped to 'accepted'
+    })
+    .populate({
+      path: 'client',
+      select: '_id fullName email primaryContact companyName' // Include only necessary client fields
+    });
+    
+    console.log(`Found ${approvedProposals.length} approved proposals for company ${companyId}`);
+    
+    // Extract client information with project details
+    const clientsMap = new Map();
+    
+    approvedProposals.forEach(proposal => {
+      // Only process if we have client data
+      if (proposal.client && proposal.client._id) {
+        const clientId = proposal.client._id.toString();
+        
+        // If we haven't seen this client yet, add them to our map
+        if (!clientsMap.has(clientId)) {
+          clientsMap.set(clientId, {
+            _id: proposal.client._id,
+            fullName: proposal.client.fullName || 'Unknown Client',
+            email: proposal.client.email,
+            primaryContact: proposal.client.primaryContact,
+            companyName: proposal.client.companyName,
+            projectTitle: proposal.projectTitle, // Include the project title from the proposal
+            proposalId: proposal._id
+          });
+        }
+      }
+    });
+    
+    // Convert map to array
+    const clientsWithApprovedProposals = Array.from(clientsMap.values());
+    
+    console.log(`Returning ${clientsWithApprovedProposals.length} unique clients with approved proposals`);
+    
+    res.status(200).json({
+      success: true,
+      count: clientsWithApprovedProposals.length,
+      data: clientsWithApprovedProposals
+    });
+  } catch (error) {
+    console.error('Error getting clients with approved proposals:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving clients with approved proposals',
       error: error.message
     });
   }

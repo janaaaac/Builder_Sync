@@ -80,62 +80,10 @@ const ConstructionPortfolioProfile = () => {
     fetchPortfolio();
   }, [companyId]);
 
-  // Use portfolio data if available, otherwise use hardcoded data
-  const projects = portfolio?.projects || [
-    {
-      id: 1,
-      title: "Luxury Apartment Complex",
-      category: "residential",
-      description: "25-story luxury residential complex with modern amenities",
-      details: ["250 Units", "Underground Parking", "Rooftop Garden"],
-      image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00",
-      location: "Colombo 07",
-      completion: "2023"
-    },
-    {
-      id: 2,
-      title: "Tech Park Development",
-      category: "commercial",
-      description: "State-of-the-art technology park with smart infrastructure",
-      details: ["100,000 sq ft", "Smart Building", "Green Certified"],
-      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab",
-      location: "IT Zone",
-      completion: "2024"
-    },
-    {
-      id: 3,
-      title: "Highway Extension Project",
-      category: "infrastructure",
-      description: "Major highway extension with bridges and tunnels",
-      details: ["50 KM Length", "6 Bridges", "2 Tunnels"],
-      image: "https://images.unsplash.com/photo-1513828583688-c52646db42da",
-      location: "Southern Highway",
-      completion: "2025"
-    }
-  ];
+  // Use portfolio data if available, no default fallback
+  const projects = portfolio?.projects || [];
 
-  const services = portfolio?.services || [
-    {
-      icon: Building,
-      title: "Commercial Construction",
-      description: "Office buildings, retail spaces, and industrial facilities"
-    },
-    {
-      icon: Home,
-      title: "Residential Development",
-      description: "Luxury apartments, housing complexes, and custom homes"
-    },
-    {
-      icon: Factory,
-      title: "Industrial Projects",
-      description: "Manufacturing plants, warehouses, and industrial parks"
-    },
-    {
-      icon: Ruler,
-      title: "Infrastructure Development",
-      description: "Roads, bridges, and public infrastructure projects"
-    }
-  ];
+  const services = portfolio?.services || [];
 
   // Helper to map icon string to Lucide icon component - expand to include all possible icons
   const iconMap = {
@@ -191,7 +139,7 @@ const ConstructionPortfolioProfile = () => {
   // For the stats section - consolidate all stats logic into a single useMemo
   const { stats, clientSatisfactionValue } = useMemo(() => {
     let statsArray = [];
-    let satisfactionValue = "1000+";
+    let satisfactionValue = "";
     
     if (portfolio?.statistics?.length) {
       // Map backend statistics to our format with proper icons
@@ -219,29 +167,8 @@ const ConstructionPortfolioProfile = () => {
         };
       });
     } else {
-      // Default stats if none from backend
-      statsArray = [
-        {
-          icon: Trophy,
-          value: "25+",
-          label: "Years Experience"
-        },
-        {
-          icon: Building2,
-          value: "500+",
-          label: "Projects Completed"
-        },
-        {
-          icon: Users,
-          value: "1000+",
-          label: "Team Members"
-        },
-        {
-          icon: CheckCircle2,
-          value: "100%", 
-          label: "Client Satisfaction"
-        }
-      ];
+      // Empty stats array if none from backend
+      statsArray = [];
     }
     
     // Handle client satisfaction logic inside the useMemo
@@ -264,34 +191,6 @@ const ConstructionPortfolioProfile = () => {
       clientSatisfactionValue: satisfactionValue
     };
   }, [portfolio, iconMap]);
-
-  const whyChooseUs = {
-    heading: "Why Choose Us",
-    subheading: "Excellence in Construction, Committed to Quality",
-    features: [
-      {
-        icon: "HardHat",
-        title: "Expert Team",
-        desc: "Highly skilled professionals"
-      },
-      {
-        icon: "CheckCircle2",
-        title: "Quality Assured",
-        desc: "ISO 9001:2015 certified"
-      },
-      {
-        icon: "Clock",
-        title: "Timely Delivery",
-        desc: "On-time project completion"
-      },
-      {
-        icon: "Trophy",
-        title: "Award Winning",
-        desc: "Industry recognized excellence"
-      }
-    ],
-    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd"
-  };
 
   // Handle services icons properly
   const processedServices = useMemo(() => {
@@ -324,29 +223,8 @@ const ConstructionPortfolioProfile = () => {
       });
     }
     
-    // Default hardcoded services
-    return [
-      {
-        icon: Building,
-        title: "Commercial Construction",
-        description: "Office buildings, retail spaces, and industrial facilities"
-      },
-      {
-        icon: Home,
-        title: "Residential Development",
-        description: "Luxury apartments, housing complexes, and custom homes"
-      },
-      {
-        icon: Factory,
-        title: "Industrial Projects",
-        description: "Manufacturing plants, warehouses, and industrial parks"
-      },
-      {
-        icon: Ruler,
-        title: "Infrastructure Development",
-        description: "Roads, bridges, and public infrastructure projects"
-      }
-    ];
+    // Return empty array instead of default services
+    return [];
   }, [portfolio, iconMap]);
 
   // Important: Move this useMemo here, before the loading check
@@ -774,7 +652,7 @@ const ConstructionPortfolioProfile = () => {
                 <input 
                   type="text" 
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                  value={editedPortfolio?.hero?.tagline || "Leading Construction Company"}
+                  value={editedPortfolio?.hero?.tagline }
                   onChange={(e) => handleInputChange('hero', 'tagline', e.target.value)}
                   placeholder="e.g. Leading Construction Company"
                 />
@@ -786,7 +664,7 @@ const ConstructionPortfolioProfile = () => {
                 <input 
                   type="text" 
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                  value={editedPortfolio?.hero?.mainHeading || "Building Tomorrow's"}
+                  value={editedPortfolio?.hero?.mainHeading}
                   onChange={(e) => handleInputChange('hero', 'mainHeading', e.target.value)}
                   placeholder="e.g. Building Tomorrow's"
                 />
@@ -798,7 +676,7 @@ const ConstructionPortfolioProfile = () => {
                 <input 
                   type="text" 
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all text-orange-500"
-                  value={editedPortfolio?.hero?.accentHeading || "Landmarks"}
+                  value={editedPortfolio?.hero?.accentHeading }
                   onChange={(e) => handleInputChange('hero', 'accentHeading', e.target.value)}
                   placeholder="e.g. Landmarks"
                 />
@@ -809,7 +687,7 @@ const ConstructionPortfolioProfile = () => {
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea 
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all h-32"
-                  value={editedPortfolio?.hero?.description || ""}
+                  value={editedPortfolio?.hero?.description }
                   onChange={(e) => handleInputChange('hero', 'description', e.target.value)}
                   placeholder="Describe your company and services in a few sentences..."
                 ></textarea>
@@ -1563,9 +1441,43 @@ const ConstructionPortfolioProfile = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-    </div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="space-y-8 w-4/5 max-w-4xl">
+          {/* Hero section skeleton */}
+          <div className="w-full h-64 bg-gray-200 rounded-xl animate-pulse"></div>
+          
+          {/* Stats section skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-32 bg-gray-200 rounded-xl animate-pulse"></div>
+            ))}
+          </div>
+          
+          {/* Services section skeleton */}
+          <div className="space-y-4">
+            <div className="h-8 w-1/3 mx-auto bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="h-4 w-2/3 mx-auto bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-48 bg-gray-200 rounded-xl animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Projects section skeleton */}
+          <div className="space-y-4">
+            <div className="h-8 w-1/3 mx-auto bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="h-4 w-2/3 mx-auto bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-64 bg-gray-200 rounded-xl animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
  // Handle sidebar collapse from the sidebar component
  const handleSidebarCollapse = (collapsed) => {
@@ -1644,7 +1556,7 @@ const ConstructionPortfolioProfile = () => {
         <div className="relative bg-gray-900 text-white">
           <div className="absolute inset-0">
             <img 
-              src={portfolio?.hero?.backgroundImage || "https://images.unsplash.com/photo-1541976590-713941681591"}
+              src={portfolio?.hero?.backgroundImage || ""}
               alt="Construction Site"
               className="w-full h-full object-cover opacity-20"
             />
@@ -1655,26 +1567,25 @@ const ConstructionPortfolioProfile = () => {
               <div className="flex items-center gap-4 mb-6">
                 <div className="h-1 w-20 bg-orange-500 rounded-full"></div>
                 <span className="text-orange-500 font-medium">
-                  {portfolio?.hero?.tagline || "Leading Construction Company"}
+                  {portfolio?.hero?.tagline || ""}
                 </span>
               </div>
               <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                {portfolio?.hero?.mainHeading || "Building Tomorrow's"}
-                <span className="text-orange-500"> {portfolio?.hero?.accentHeading || "Landmarks"}</span>
-                <br />Today
+                {portfolio?.hero?.mainHeading || ""}
+                <span className="text-orange-500"> {portfolio?.hero?.accentHeading || ""}</span>
+                <br />
               </h1>
               <p className="text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl">
-                {portfolio?.hero?.description || 
-                  "With over 25 years of excellence in construction, we specialize in delivering innovative and sustainable building solutions for residential, commercial, and industrial projects."}
+                {portfolio?.hero?.description || ""}
               </p>
               <div className="flex flex-wrap gap-4">
-                <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full font-medium inline-flex items-center group transition-all">
+                {/* <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full font-medium inline-flex items-center group transition-all">
                   View Our Projects
                   <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-full font-medium backdrop-blur-sm">
                   Contact Us
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -1708,27 +1619,31 @@ const ConstructionPortfolioProfile = () => {
                 {portfolio?.servicesHeading || "Our Services"}
               </h2>
               <p className="text-gray-600">
-                {portfolio?.servicesSummary || "We offer comprehensive construction solutions tailored to meet diverse project requirements across various sectors."}
+                {portfolio?.servicesSummary || ""}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {processedServices.map((service, index) => (
-                <div key={index} 
-                  className="group bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:border-orange-200 transition-all"
-                >
-                  <div className="bg-orange-50 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
-                    <service.icon className="w-7 h-7 text-orange-500" />
+            {processedServices.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {processedServices.map((service, index) => (
+                  <div key={index} 
+                    className="group bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:border-orange-200 transition-all"
+                  >
+                    <div className="bg-orange-50 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
+                      <service.icon className="w-7 h-7 text-orange-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
+                    <p className="text-gray-600 mb-6">{service.description}</p>
+                    <button className="text-orange-500 group-hover:text-orange-600 inline-flex items-center text-sm font-medium">
+                      {service.ctaText || "Learn More"}
+                      <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    </button>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
-                  <p className="text-gray-600 mb-6">{service.description}</p>
-                  <button className="text-orange-500 group-hover:text-orange-600 inline-flex items-center text-sm font-medium">
-                    {service.ctaText || "Learn More"}
-                    <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500">No services available.</div>
+            )}
           </div>
         </div>
 
@@ -1823,14 +1738,14 @@ const ConstructionPortfolioProfile = () => {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="h-1 w-20 bg-orange-500 rounded-full"></div>
                   <span className="text-orange-500 font-medium">
-                    {portfolio?.whyChooseUs?.heading || whyChooseUs.heading}
+                    {portfolio?.whyChooseUs?.heading || "Why Choose Us"}
                   </span>
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  {portfolio?.whyChooseUs?.subheading || whyChooseUs.subheading}
+                  {portfolio?.whyChooseUs?.subheading || ""}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(portfolio?.whyChooseUs?.features || whyChooseUs.features).map((item, index) => {
+                  {(portfolio?.whyChooseUs?.features || []).map((item, index) => {
                     const Icon = iconMap[item.icon] || Star;
                     return (
                       <div key={index} className="flex items-start gap-4">
@@ -1848,7 +1763,7 @@ const ConstructionPortfolioProfile = () => {
               </div>
               <div className="relative">
                 <img 
-                  src={portfolio?.whyChooseUs?.image || whyChooseUs.image}
+                  src={portfolio?.whyChooseUs?.image || ""}
                   alt="Why Choose Us"
                   className="rounded-2xl shadow-2xl"
                 />
@@ -1859,7 +1774,7 @@ const ConstructionPortfolioProfile = () => {
                     </div>
                     <div>
                       <div className="text-3xl font-bold text-gray-900">
-                        {portfolio?.clientCount || portfolio?.clients?.length || clientSatisfactionValue}
+                        {portfolio?.clientCount || portfolio?.clients?.length || clientSatisfactionValue || "100%"}
                       </div>
                       <div className="text-gray-600">Happy Clients</div>
                     </div>
