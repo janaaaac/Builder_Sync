@@ -248,25 +248,27 @@ const CompanyRegister = () => {
       
     } catch (error) {
       console.error('Registration error:', error);
-      
+
       let errorMessage = 'Registration failed. Please try again.';
       if (error.response) {
         // Improved error message extraction
-        errorMessage = error.response.data.message || 
-                     error.response.data.error || 
-                     error.response.statusText || 
-                     'Unknown server error';
-        
+        errorMessage = error.response.data?.message ||
+                       error.response.data?.error ||
+                       error.response.statusText ||
+                       'Unknown server error';
+    
         // If validation errors, show the first one
-        if (error.response.data.errors) {
+        if (error.response.data?.errors) {
           const firstError = Object.values(error.response.data.errors)[0];
-          errorMessage = firstError.message || firstError;
+          errorMessage = firstError?.message || firstError;
         }
+      } else if (error.message) {
+        errorMessage = error.message;
       }
-      
-      setMessage({ 
+    
+      setMessage({
         text: errorMessage,
-        type: 'error' 
+        type: 'error'
       });
     } finally {
       setIsLoading(false);

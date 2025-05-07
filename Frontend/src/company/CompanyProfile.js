@@ -521,13 +521,14 @@ export default function CompanySettings() {
                     <div className="lg:col-span-2">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                             <User className="h-4 w-4" />
                             Username
                           </label>
                           <input 
                             type="text" 
                             name="username"
+                            id="username" // Add id
                             value={companyData.username}
                             onChange={handleInputChange}
                             placeholder="Enter your username"
@@ -535,13 +536,14 @@ export default function CompanySettings() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                             <Mail className="h-4 w-4" />
                             Email
                           </label>
                           <input 
                             type="email" 
                             name="email"
+                            id="email" // Add id
                             value={companyData.email}
                             onChange={handleInputChange}
                             placeholder="Enter your email"
@@ -549,13 +551,14 @@ export default function CompanySettings() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                          <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
                             Company Name
                           </label>
                           <input 
                             type="text" 
                             name="companyName"
+                            id="companyName" // Add id
                             value={companyData.companyName}
                             onChange={handleInputChange}
                             placeholder="Enter your company name"
@@ -563,13 +566,14 @@ export default function CompanySettings() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                          <label htmlFor="contactPhoneNumber" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                             <Phone className="h-4 w-4" />
                             Contact Phone Number
                           </label>
                           <input 
                             type="tel" 
                             name="contactPhoneNumber"
+                            id="contactPhoneNumber" // Add id
                             value={companyData.contactPhoneNumber}
                             onChange={handleInputChange}
                             placeholder="Enter your contact number"
@@ -577,13 +581,14 @@ export default function CompanySettings() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                          <label htmlFor="registeredOfficeAddress" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
                             Registered Office Address
                           </label>
                           <input 
                             type="text" 
                             name="registeredOfficeAddress"
+                            id="registeredOfficeAddress" // Add id
                             value={companyData.registeredOfficeAddress}
                             onChange={handleInputChange}
                             placeholder="Enter your office address"
@@ -591,13 +596,14 @@ export default function CompanySettings() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                          <label htmlFor="websiteURL" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                             <Globe className="h-4 w-4" />
                             Website URL
                           </label>
                           <input 
                             type="url" 
                             name="websiteURL"
+                            id="websiteURL" // Add id
                             value={companyData.websiteURL}
                             onChange={handleInputChange}
                             placeholder="Enter your website URL"
@@ -639,10 +645,11 @@ export default function CompanySettings() {
                       <form onSubmit={handleUpdatePassword}>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                            <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
                             <input 
                               type="password" 
                               name="currentPassword"
+                              id="currentPassword" // Add id
                               value={passwordData.currentPassword}
                               onChange={handlePasswordChange}
                               className={`w-full px-4 py-2 border ${passwordError.currentPassword ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#EA540C]`}
@@ -653,25 +660,28 @@ export default function CompanySettings() {
                           </div>
                           
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                             <input 
                               type="password" 
                               name="newPassword"
+                              id="newPassword" // Add id
                               value={passwordData.newPassword}
                               onChange={handlePasswordChange}
                               className={`w-full px-4 py-2 border ${passwordError.newPassword ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#EA540C]`}
                             />
-                            {passwordError.newPassword && (
+                            {passwordError.newPassword ? (
                               <p className="mt-1 text-sm text-red-600">{passwordError.newPassword}</p>
+                            ) : (
+                              <p className="mt-1 text-xs text-gray-500">Password must be at least 8 characters long</p>
                             )}
-                            <p className="mt-1 text-xs text-gray-500">Password must be at least 8 characters long</p>
                           </div>
                           
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
                             <input 
                               type="password" 
                               name="confirmPassword"
+                              id="confirmPassword" // Add id
                               value={passwordData.confirmPassword}
                               onChange={handlePasswordChange}
                               className={`w-full px-4 py-2 border ${passwordError.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#EA540C]`}

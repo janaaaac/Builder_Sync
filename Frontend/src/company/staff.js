@@ -254,6 +254,7 @@ const StaffManagement = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -289,6 +290,9 @@ const StaffManagement = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {roles.find(r => r.value === staff.role)?.label || staff.role}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {staff.company ? (typeof staff.company === 'object' ? staff.company.name : staff.company) : 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">

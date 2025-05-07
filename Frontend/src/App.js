@@ -1,6 +1,5 @@
 // App.js or your main router file
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Auth imports
 import LoginTest from './test/testlogin';
@@ -57,7 +56,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
-        <Route path="/lan" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/register-category" element={<RegistrationCategory />} />
 
         {/* Auth routes */}

@@ -32,15 +32,11 @@ exports.createClient = async (req, res) => {
         return res.status(400).json({ message: "Email or username already exists" });
       }
   
-      // Encrypt password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-  
-      // Create new client
+      // Create new client - let the model middleware handle password hashing
       const newClient = new Client({
         username,
         email,
-        password: hashedPassword,
+        password, // Just use the plain password - model's pre-save hook will hash it
         fullName,
         companyName,
         clientType,

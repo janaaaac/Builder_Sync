@@ -36,7 +36,13 @@ CompanySchema.pre("save", async function (next) {
 
 // Compare Password
 CompanySchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  try {
+    // Using direct comparison with the stored hash
+    return await bcrypt.compare(enteredPassword, this.password);
+  } catch (error) {
+    console.error("Password comparison error:", error);
+    return false;
+  }
 };
 
 module.exports = mongoose.model("Company", CompanySchema);

@@ -26,16 +26,16 @@ export default function CompanyDashboard() {
     loading: false
   });
 
-  // Create dynamic stats array using fetched project and staff data
+  // Add Total revenue stat
   const stats = [
-    { title: 'Total revenue', value: '$53,00989', icon: 'chart' },
+    { title: 'Total revenue', value: '$0', icon: 'chart' },
     { 
       title: 'Projects', 
       value: projectStats.loading ? '...' : projectStats.total.toString(), 
       total: `/${projectStats.limit}`, 
       icon: 'briefcase' 
     },
-    { title: 'Time spent', value: '1022', total: '/1300 Hrs', icon: 'clock' },
+    { title: 'Time spent', value: '0', total: '/1000 Hrs', icon: 'clock' },
     { 
       title: 'Resources', 
       value: staffStats.loading ? '...' : staffStats.total.toString(), 
@@ -46,14 +46,14 @@ export default function CompanyDashboard() {
 
   // Create dynamic stats array using fetched project and staff data
   const getStats = () => [
-    { title: 'Total revenue', value: '$53,00989', icon: 'chart' },
+    { title: 'Total revenue', value: '$0', icon: 'chart' },
     { 
       title: 'Projects', 
       value: projectStats.loading ? '...' : projectStats.total.toString(), 
       total: `/${projectStats.limit}`, 
       icon: 'briefcase' 
     },
-    { title: 'Time spent', value: '1022', total: '/1300 Hrs', icon: 'clock' },
+    { title: 'Time spent', value: '0', total: '/1000 Hrs', icon: 'clock' },
     { 
       title: 'Employees', 
       value: staffStats.loading ? '...' : staffStats.total.toString(), 
@@ -62,56 +62,59 @@ export default function CompanyDashboard() {
     },
   ];
 
+  // Construction-related dummy projects
   const projects = [
     { 
-      name: 'Neisa web developement', 
-      manager: 'Om prakash sao', 
-      dueDate: 'May 25, 2023', 
+      name: 'Skyline Tower Construction', 
+      manager: 'Ava Mason', 
+      dueDate: 'May 25, 2025', 
       status: 'Completed' 
     },
     { 
-      name: 'Datascale AI app', 
-      manager: 'Neilsan mando', 
-      dueDate: 'Jun 20, 2023', 
+      name: 'Greenfield Mall Renovation', 
+      manager: 'Liam Carter', 
+      dueDate: 'Jun 20, 2025', 
       status: 'Delayed' 
     },
     { 
-      name: 'Media channel branding', 
-      manager: 'Tiruvelly priya', 
-      dueDate: 'July 13, 2023', 
+      name: 'Sunrise Apartments Build', 
+      manager: 'Olivia Turner', 
+      dueDate: 'July 13, 2025', 
       status: 'At risk' 
     },
     { 
-      name: 'Corlax iOS app developement', 
-      manager: 'Matte hannery', 
-      dueDate: 'Dec 20, 2023', 
+      name: 'Harbor Bridge Expansion', 
+      manager: 'Noah Bennett', 
+      dueDate: 'Dec 20, 2025', 
       status: 'Completed' 
     }
   ];
 
+  // Construction-related dummy tasks
   const tasks = [
     { 
-      name: 'Create a user flow of social application design', 
+      name: 'Site inspection for Skyline Tower', 
       status: 'Approved' 
     },
     { 
-      name: 'Create a user flow of social application design', 
+      name: 'Review safety protocols for Greenfield Mall', 
       status: 'In review' 
     },
     { 
-      name: 'Landing page design for Fintech project of singapore', 
+      name: 'Finalize blueprints for Sunrise Apartments', 
       status: 'In review' 
     },
     { 
-      name: 'Interactive prototype for app screens of deltamine project', 
+      name: 'Order materials for Harbor Bridge', 
       status: 'On going' 
     }
   ];
 
+  // Construction-related dummy team
   const team = [
-    { name: 'Billy Parker', role: 'ARCHITECTURE' },
-    { name: 'Nancy Salmon', role: 'ARCHITECTURE' },
-    { name: 'Stella Maxwell', role: 'ENGINEER' }
+    { name: 'Billy Parker', role: 'SITE ENGINEER' },
+    { name: 'Nancy Salmon', role: 'PROJECT MANAGER' },
+    { name: 'Stella Maxwell', role: 'ARCHITECT' }
   ];
 
   // Helper function to get appropriate color for status

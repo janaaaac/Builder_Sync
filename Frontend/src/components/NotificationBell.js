@@ -307,12 +307,16 @@ const NotificationBell = ({ userType }) => {
           </div>
           
           {!authError && (
-            <div className="px-4 py-3 text-center border-t border-gray-200">
+            <div className="px-4 py-3 text-center border-t border-gray-200 bg-gradient-to-r from-orange-50 to-white">
               <button 
                 onClick={viewAllNotifications}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-orange-600 hover:text-orange-800 font-medium transition-all duration-300 transform hover:scale-105 px-4 py-2 rounded-full border border-orange-200 hover:border-orange-300 shadow-sm hover:shadow flex items-center justify-center mx-auto"
               >
+                <span className="mr-1">✨</span>
                 View All Notifications
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           )}

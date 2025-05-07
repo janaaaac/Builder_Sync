@@ -139,26 +139,56 @@ const FeaturesSection = () => {
         <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 transition-opacity duration-300 ${animating ? 'opacity-0' : 'opacity-100'}`}>
           {activeTab === 'company' && (
             <>
-              <div className={`bg-gray-400 p-6 rounded-3xl flex flex-col justify-between h-64 transition-all duration-500 ease-in-out ${cardAnimations ? 'transform-none opacity-100' : 'translate-y-10 opacity-0'}`} style={{ transitionDelay: '0ms' }}>
-                <div>
-                  <div className="h-1 w-16 bg-white mb-2 transition-all duration-300 ease-in-out hover:w-24"></div>
-                  <h3 className="text-xl font-medium mb-4">Trusted Contractor Connections</h3>
+              <div
+                className={`relative rounded-3xl flex flex-col justify-between h-64 overflow-hidden transition-all duration-500 ease-in-out ${cardAnimations ? 'transform-none opacity-100' : 'translate-y-10 opacity-0'}`}
+                style={{
+                  backgroundImage: 'url("https://i.pinimg.com/736x/f2/f3/7c/f2f37c8ab0549416a4b4712eb1805594.jpg")',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div className="absolute inset-0 bg-black/40 z-0" />
+                <div className="relative z-10 p-6 flex flex-col h-full">
+                  <div>
+                    <div className="h-1 w-16 bg-white mb-2 transition-all duration-300 ease-in-out hover:w-24"></div>
+                    <h3 className="text-xl font-medium mb-4 text-white drop-shadow">Trusted Contractor Connections</h3>
+                  </div>
+                  {/* <p className="text-white mt-auto drop-shadow">Ai Wave - Ai Chatbot Mobile App</p> */}
                 </div>
-                <p className="text-white mt-auto">Ai Wave - Ai Chatbot Mobile App</p>
               </div>
-              <div className={`bg-gray-400 p-6 rounded-3xl flex flex-col justify-between h-64 transition-all duration-500 ease-in-out ${cardAnimations ? 'transform-none opacity-100' : 'translate-y-10 opacity-0'}`} style={{ transitionDelay: '150ms' }}>
-                <div>
-                  <div className="h-1 w-16 bg-white mb-2 transition-all duration-300 ease-in-out hover:w-24"></div>
-                  <h3 className="text-xl font-medium mb-4">AI-Powered Quantity Surveying</h3>
+              <div
+                className={`relative rounded-3xl flex flex-col justify-between h-64 overflow-hidden transition-all duration-500 ease-in-out ${cardAnimations ? 'transform-none opacity-100' : 'translate-y-10 opacity-0'}`}
+                style={{
+                  backgroundImage: 'url("https://img.freepik.com/premium-photo/photo-ai-chip-artificial-intelligence-digital-future-technology-innovation-hand-background_763111-134793.jpg?w=1800")',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div className="absolute inset-0 bg-black/40 z-0" />
+                <div className="relative z-10 p-6 flex flex-col h-full">
+                  <div>
+                    <div className="h-1 w-16 bg-white mb-2 transition-all duration-300 ease-in-out hover:w-24"></div>
+                    <h3 className="text-xl font-medium mb-4 text-white drop-shadow">AI-Powered Quantity Surveying</h3>
+                  </div>
+                  {/* <p className="text-white mt-auto drop-shadow">Ai Wave - Ai Chatbot Mobile App</p> */}
                 </div>
-                <p className="text-white mt-auto">Ai Wave - Ai Chatbot Mobile App</p>
               </div>
-              <div className={`bg-gray-400 p-6 rounded-3xl flex flex-col justify-between h-64 transition-all duration-500 ease-in-out ${cardAnimations ? 'transform-none opacity-100' : 'translate-y-10 opacity-0'}`} style={{ transitionDelay: '300ms' }}>
-                <div>
-                  <div className="h-1 w-16 bg-white mb-2 transition-all duration-300 ease-in-out hover:w-24"></div>
-                  <h3 className="text-xl font-medium mb-4">Comprehensive Project Management Tools</h3>
+              <div
+                className={`relative rounded-3xl flex flex-col justify-between h-64 overflow-hidden transition-all duration-500 ease-in-out ${cardAnimations ? 'transform-none opacity-100' : 'translate-y-10 opacity-0'}`}
+                style={{
+                  backgroundImage: 'url("https://csengineermag.com/wp-content/uploads/2020/02/AdobeStock_242887715-990x0-c-1.webp")',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div className="absolute inset-0 bg-black/40 z-0" />
+                <div className="relative z-10 p-6 flex flex-col h-full">
+                  <div>
+                    <div className="h-1 w-16 bg-white mb-2 transition-all duration-300 ease-in-out hover:w-24"></div>
+                    <h3 className="text-xl font-medium mb-4 text-white drop-shadow">Comprehensive Project Management Tools</h3>
+                  </div>
+                
                 </div>
-                <p className="text-white mt-auto">App Lancer - Freelance Mobile App</p>
               </div>
             </>
           )}

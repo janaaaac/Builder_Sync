@@ -648,9 +648,12 @@ const ConstructionPortfolioProfile = () => {
             
             <div className="space-y-5">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Tagline</label>
+                {/* Add htmlFor to the label */}
+                <label htmlFor="hero-tagline" className="block text-sm font-medium text-gray-700">Tagline</label>
                 <input 
                   type="text" 
+                  // Add id to the input
+                  id="hero-tagline"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                   value={editedPortfolio?.hero?.tagline }
                   onChange={(e) => handleInputChange('hero', 'tagline', e.target.value)}
@@ -1479,6 +1482,20 @@ const ConstructionPortfolioProfile = () => {
       </div>
     );
   }
+
+  // Add this block to handle and display the fetch error
+  if (error) {
+    return (
+      <div className="flex min-h-screen bg-gray-50 items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Error Loading Portfolio</h2>
+          <p className="text-gray-700">{error}</p>
+          {/* Optionally add a retry button */}
+        </div>
+      </div>
+    );
+  }
+
  // Handle sidebar collapse from the sidebar component
  const handleSidebarCollapse = (collapsed) => {
   setIsCollapsed(collapsed);

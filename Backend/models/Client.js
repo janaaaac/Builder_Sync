@@ -9,8 +9,8 @@ const ClientSchema = new mongoose.Schema({
   companyName: { type: String },
   clientType: { type: String, required: true },
   nicPassportNumber: { type: String, required: true },
-  nicPassportFile: { type: String }, // AWS S3 URL
-  profilePicture: { type: String }, // AWS S3 URL
+  nicPassportFile: { type: String },
+  profilePicture: { type: String }, 
   primaryContact: { type: String, required: true },
   address: { type: String, required: true },
   preferredCommunication: { type: String },
@@ -24,9 +24,15 @@ ClientSchema.pre("save", async function (next) {
   next();
 });
 
-// Compare Password
+// Compare Password - Fixed implementation
 ClientSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  try {
+    // Using direct comparison with the stored hash
+    return await bcrypt.compare(enteredPassword, this.password);
+  } catch (error) {
+    console.error("Password comparison error:", error);
+    return false;
+  }
 };
 
 module.exports = mongoose.model("Client", ClientSchema);
