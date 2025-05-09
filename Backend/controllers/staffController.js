@@ -1,6 +1,8 @@
 const Staff = require("../models/Staff");
 const Company = require("../models/Company");
 const { generatePresignedUrl } = require("../utils/s3Presigner");
+const Project = require("../models/Project");
+const Proposal = require("../models/Proposal");
 
 exports.createStaff = async (req, res) => {
   try {
@@ -223,6 +225,34 @@ exports.getDashboard = async (req, res) => {
       });
     }
     
+    // Project manager specific dashboard
+    if (staff.role === 'project_manager') {
+      // Fetch projects assigned to this manager
+      const projects = await Project.find({ staff: staffId });
+      const totalProjects = projects.length;
+      const ongoing = projects.filter(p => p.status === 'ongoing').length;
+      const completed = projects.filter(p => p.status === 'completed').length;
+      const pending = projects.filter(p => p.status === 'pending').length;
+      // Sum budgets
+      const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
+      // Pending proposals count
+      const pendingProposals = await Proposal.countDocuments({ company: staff.company, status: 'pending' });
+      return res.status(200).json({
+        success: true,
+        data: {
+          name: staff.fullName,
+          role: staff.role,
+          totalProjects,
+          ongoing,
+          completed,
+          pending,
+          totalBudget,
+          pendingProposals,
+          assignedProjects: projects
+        }
+      });
+    }
+    
     // Sample dashboard data - replace with actual DB queries
     // You would typically fetch this data from your project and task models
     const dashboardData = {
@@ -395,5 +425,17 @@ exports.getStaffByClient = async (req, res) => {
       message: "Server error",
       error: error.message
     });
+  }
+};
+
+// Get all staff for staff (same company)
+exports.getStaffByCompany = async (req, res) => {
+  try {
+    const companyId = req.user.company;
+    const staff = await Staff.find({ company: companyId, isApproved: true });
+    const result = staff.map(({ _id, fullName, role, profilePicture }) => ({ _id, fullName, role, profilePicture }));
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error fetching company staff', error: err.message });
   }
 };

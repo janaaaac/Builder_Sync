@@ -49,7 +49,11 @@ import CompanyCalendar from './company/CompanyCalendar';
 import CompanyDashboard from './company/CompanyDashboard';
 import StaffNotifications from './Staff/StaffNotifications';
 import ClientNotifications from './client/ClientNotifications';
+import StaffProjectDetail from './Staff/StaffProjectDetail';
+import StaffTasks from './Staff/StaffTasks';
 
+import StaffCalendar from './Staff/StaffCalendar';
+import StaffTaskDetail from './Staff/StaffTaskDetail';
 
 function App() {
   return (
@@ -100,6 +104,7 @@ function App() {
         <Route path="/company-projects" element={<CompanyProjects />} />
         <Route path="/company-calender" element={<CompanyCalendar />} />
         <Route path="/staff/notifications" element={<StaffNotifications />} />
+    
 
         {/* Portfolio routes */}
         <Route path="/portfolio-setup-test" element={<PortfolioProfileSetup />} />
@@ -109,8 +114,12 @@ function App() {
         <Route path="/project-details/:projectId" element={<ProjectDetails />} /> {/* Add this route */}
 
         <Route path="/staff-projects" element={<StaffProjects />} />
-
-       
+        <Route path="/staff-projects/:projectId" element={<StaffProjectDetail />} />
+        <Route path="/staff-tasks" element={<StaffTasks />} />
+  
+        <Route path="/staff-tasks/:id" element={<StaffTaskDetail />} />
+        <Route path="/staff-calendar" element={<StaffCalendar />} />
+        <Route path="/staff-notification" element={<StaffNotifications />} />
 
         {/* Add a catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />

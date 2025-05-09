@@ -111,7 +111,7 @@ const StaffSidebar = ({ onCollapseChange }) => {
         navigate('/staff-documents');
         break;
       case "Team":
-        navigate('/staff-team');
+        navigate('/staff-notification');
         break;
       case "Settings":
         navigate('/staff-settings');

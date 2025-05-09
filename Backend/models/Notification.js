@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const NotificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Staff',
     required: true
   },
   userType: {
@@ -22,7 +22,9 @@ const NotificationSchema = new mongoose.Schema({
       'meeting_invite', 
       'meeting_update', 
       'meeting_reminder',
-      'meeting_canceled'
+      'meeting_canceled',
+      'project_assigned',
+      'task_assigned'
     ]
   },
   message: {

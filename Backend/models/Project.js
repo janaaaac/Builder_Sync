@@ -13,6 +13,25 @@ const ProjectSchema = new Schema({
   budget: { type: Number },
   location: { type: String },
   staff: [{ type: Schema.Types.ObjectId, ref: 'Staff' }],
+  plans: [{
+    name: { type: String, default: 'Unnamed Plan' },
+    url: { type: String, required: true },
+    type: { type: String, default: 'application/octet-stream' },
+    size: { type: Number, default: 0 },
+    description: { type: String, default: '' },
+    version: { type: String, default: '1.0' },
+    planType: { type: String, default: 'otherPlans' },
+    uploadedBy: {
+      type: Schema.Types.ObjectId,
+      refPath: 'plans.uploaderModel'
+    },
+    uploaderModel: {
+      type: String,
+      enum: ['Staff', 'Company', 'Client'],
+      default: 'Staff'
+    },
+    uploadDate: { type: Date, default: Date.now }
+  }],
   // Add more fields as needed
 }, { timestamps: true });
 

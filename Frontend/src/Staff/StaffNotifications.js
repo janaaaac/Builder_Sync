@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Bell, CheckCircle, Calendar, MessageSquare, X, Info, AlertTriangle, Clock, ToolIcon, Briefcase, HardHat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 const StaffNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -9,15 +12,57 @@ const StaffNotifications = () => {
   const [error, setError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchNotifications();
-    // Set up polling to check for new notifications every minute
-    const intervalId = setInterval(fetchNotifications, 60000);
+    const init = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      // fetch current user ID
+      try {
+        const profile = await axios.get(`${API_URL}/api/staff/profile`, { headers: { Authorization: `Bearer ${token}` } });
+        if (profile.data.success) {
+          setUserId(profile.data.data._id);
+        }
+      } catch (err) {
+        console.error('Error fetching staff profile:', err);
+      }
+    };
+    init();
+    let intervalId;
+    // Once userId is known, start polling
+    if (userId) {
+      fetchNotifications();
+      intervalId = setInterval(fetchNotifications, 60000);
+    }
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, [userId]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    // initialize socket connection
+    const s = io(process.env.REACT_APP_API_URL || 'http://localhost:5001', {
+      auth: { token: `Bearer ${token}` }
+    });
+    setSocket(s);
+    // when userId is set, join the notifications room
+    if (userId) {
+      const room = `notifications:${userId}`;
+      s.emit('joinRoom', room);
+      // listen for real-time notifications
+      s.on('notification', (n) => {
+        setNotifications(prev => [n, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      });
+    }
+    return () => {
+      if (s) s.disconnect();
+    };
+  }, [userId]);
 
   const fetchNotifications = async () => {
     try {
@@ -31,61 +76,22 @@ const StaffNotifications = () => {
         return;
       }
 
-      const userId = localStorage.getItem('userId');
       if (!userId) {
-        // Try to recover the user ID from token verification
-        try {
-          const verifyResponse = await axios.get('http://localhost:5001/api/auth/verify', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          if (verifyResponse.data.success && verifyResponse.data.user && verifyResponse.data.user.id) {
-            // Store the recovered user ID
-            localStorage.setItem('userId', verifyResponse.data.user.id);
-            // Now use the recovered ID
-            fetchNotificationsWithUserId(verifyResponse.data.user.id, token);
-          } else {
-            setError('User ID not found - please log in again');
-            setLoading(false);
-          }
-        } catch (verifyErr) {
-          console.error('Token verification failed:', verifyErr);
-          setError('Authentication failed - please log in again');
-          setLoading(false);
-        }
+        setLoading(false);
         return;
       }
-
-      fetchNotificationsWithUserId(userId, token);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-      setError('Error fetching notifications');
-      setLoading(false);
-    }
-  };
-
-  const fetchNotificationsWithUserId = async (userId, token) => {
-    try {
-      const response = await axios.get(`http://localhost:5001/api/notifications/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
+      // fetch notifications
+      const response = await axios.get(`${API_URL}/api/notifications/user/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
       if (response.data.success) {
         setNotifications(response.data.data);
-        // Count unread notifications
-        const unread = response.data.data.filter(notification => !notification.isRead).length;
-        setUnreadCount(unread);
-        setError(null);
+        setUnreadCount(response.data.data.filter(n => !n.isRead).length);
       } else {
         setError('Failed to fetch notifications');
       }
+
     } catch (err) {
-      console.error('Error fetching notifications with userId:', err);
-      if (err.response && err.response.status === 401) {
-        setError('Session expired - please log in again');
-      } else {
-        setError('Error fetching notifications');
-      }
+      console.error('Error fetching notifications:', err);
+      setError('Error fetching notifications');
     } finally {
       setLoading(false);
     }

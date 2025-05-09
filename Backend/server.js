@@ -17,6 +17,7 @@ const notificationRoutes = require('./routes/notificationRoutes'); // Import the
 const chatRoutes = require('./routes/chatRoutes'); // Import the chat routes
 const projectRoutes = require('./routes/projectRoutes'); // Import the project routes
 const meetingRoutes = require('./routes/meetingRoutes'); // Import the meeting routes
+const taskRoutes = require('./routes/taskRoutes'); // Import the task routes
 const app = express();
 app.use(express.json());
 
@@ -53,6 +54,7 @@ app.use('/api/notifications', notificationRoutes); // Add the notification route
 app.use('/api/chat', chatRoutes); // Add the chat routes
 app.use('/api/projects', projectRoutes); // Add the project routes
 app.use('/api/meetings', meetingRoutes); // Add the meeting routes
+app.use('/api/tasks', taskRoutes); // Add the task routes
 
 // Make uploads directory static so files can be accessed
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -72,6 +74,9 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+// Make io accessible in controllers
+app.set('io', io);
 
 // Use socket handlers
 io.on("connection", (socket) => {

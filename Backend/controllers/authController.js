@@ -70,7 +70,7 @@ const login = async (req, res) => {
         });
       }
     } else if ((user = await Staff.findOne({ email: emailRegex }))) {
-      role = "staff";
+      role = "staff";// use actual staff role (project_manager, architect, engineer, quantity_surveyor)
       
       // Staff approval check
       if (!user.isApproved) {

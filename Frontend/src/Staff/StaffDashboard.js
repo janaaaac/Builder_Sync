@@ -21,6 +21,13 @@ const StaffDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
     name: '',
     role: '',
+    totalProjects: 0,
+    ongoing: 0,
+    completed: 0,
+    pending: 0,
+    totalBudget: 0,
+    pendingProposals: 0,
+    assignedProjects: [],
     projectCount: 0,
     taskCount: 0,
     upcomingTasks: [],
@@ -114,6 +121,55 @@ const StaffDashboard = () => {
         
         {/* Dashboard Content */}
         <main className="p-6">
+          {/* Project Manager Dashboard */}
+          { !isLoading && dashboardData.role === 'project_manager' ? (
+            <>
+              <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <p className="text-gray-500 text-sm">Total Projects</p>
+                  <h3 className="text-2xl font-bold mt-2">{dashboardData.totalProjects}</h3>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <p className="text-gray-500 text-sm">Ongoing</p>
+                  <h3 className="text-2xl font-bold mt-2">{dashboardData.ongoing}</h3>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <p className="text-gray-500 text-sm">Completed</p>
+                  <h3 className="text-2xl font-bold mt-2">{dashboardData.completed}</h3>
+                </div>
+              </section>
+              <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <p className="text-gray-500 text-sm">Pending</p>
+                  <h3 className="text-2xl font-bold mt-2">{dashboardData.pending}</h3>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <p className="text-gray-500 text-sm">Total Budget</p>
+                  <h3 className="text-2xl font-bold mt-2">${dashboardData.totalBudget.toLocaleString()}</h3>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <p className="text-gray-500 text-sm">Pending Proposals</p>
+                  <h3 className="text-2xl font-bold mt-2">{dashboardData.pendingProposals}</h3>
+                </div>
+              </section>
+              <section className="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Assigned Projects</h3>
+                {dashboardData.assignedProjects.length > 0 ? (
+                  <ul className="space-y-2">
+                    {dashboardData.assignedProjects.map(proj => (
+                      <li key={proj._id} className="flex justify-between items-center border-b border-gray-100 pb-2">
+                        <span>{proj.title}</span>
+                        <span className="text-sm text-gray-500">{proj.status}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No projects assigned.</p>
+                )}
+              </section>
+            </>
+          ) : (
+            <>  {/* existing general staff view */}
           {/* Welcome Section */}
           <section className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
             <div className="p-6">
@@ -121,14 +177,14 @@ const StaffDashboard = () => {
                 <div>
                   <h2 className="text-xl font-medium text-gray-800">
                     {isLoading ? (
-                      <div className="h-7 w-48 bg-gray-200 rounded animate-pulse"></div>
+                      <span className="block h-7 w-48 bg-gray-200 rounded animate-pulse"></span>
                     ) : (
                       `Welcome back, ${dashboardData.name || 'Staff Member'}!`
                     )}
                   </h2>
                   <p className="text-gray-500 mt-1">
                     {isLoading ? (
-                      <div className="h-5 w-72 bg-gray-200 rounded animate-pulse mt-2"></div>
+                      <span className="block h-5 w-72 bg-gray-200 rounded animate-pulse mt-2"></span>
                     ) : (
                       `${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
                     )}
@@ -327,6 +383,8 @@ const StaffDashboard = () => {
               </div>
             </section>
           </div>
+          </>
+          )}
         </main>
       </div>
     </div>

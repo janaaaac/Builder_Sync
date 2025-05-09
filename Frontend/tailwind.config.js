@@ -4,6 +4,14 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#EA540C', // main brand orange
+          light: '#FF7A3D',   // lighter variant
+          dark: '#B24207'     // darker variant
+        },
+        secondary: '#FFEEE8',  // soft background accent
+      },
       fontFamily: {
         'aclonica': ['Aclonica', 'sans-serif'],
         'jakarta': ['"Plus Jakarta Sans"', 'sans-serif']
