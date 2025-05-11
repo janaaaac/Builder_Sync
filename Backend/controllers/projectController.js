@@ -551,3 +551,43 @@ exports.deletePlan = async (req, res) => {
     });
   }
 };
+
+// Get staff assigned to a specific project
+exports.getProjectStaff = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const project = await Project.findById(projectId)
+      .populate('staff', 'fullName email role profilePicture');
+    
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    // Check if user has access to this project
+    if (req.user.role === 'staff') {
+      // Staff can only see other staff if they are part of the project
+      const staffId = req.user._id.toString();
+      const isAssignedToProject = project.staff.some(s => s._id.toString() === staffId);
+      
+      if (!isAssignedToProject) {
+        return res.status(403).json({ success: false, message: 'Not authorized to view this project staff' });
+      }
+    } else if (req.user.role === 'client') {
+      // Client can only see staff if they own the project
+      if (project.client.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'Not authorized to view this project staff' });
+      }
+    } else if (req.user.role === 'company') {
+      // Company can only see staff if they own the project
+      if (project.company.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'Not authorized to view this project staff' });
+      }
+    }
+    
+    // Return the staff members assigned to the project
+    res.json({ success: true, data: project.staff || [] });
+  } catch (err) {
+    console.error('Error fetching project staff:', err);
+    res.status(500).json({ success: false, message: 'Error fetching project staff', error: err.message });
+  }
+};

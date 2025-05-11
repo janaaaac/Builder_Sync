@@ -149,6 +149,10 @@ const CompanySidebar = ({ onCollapseChange }) => {
       navigate('/company-d');
       return;
     }
+    if (item === "Documents") {
+      navigate('/company-documents');
+      return;
+    }
     if (item === "chat") {
       // Navigate to the company chat page
       navigate('/company-chat');

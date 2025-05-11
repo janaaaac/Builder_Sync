@@ -54,6 +54,8 @@ import StaffTasks from './Staff/StaffTasks';
 
 import StaffCalendar from './Staff/StaffCalendar';
 import StaffTaskDetail from './Staff/StaffTaskDetail';
+import StaffDocuments from './Staff/StaffDocuments';
+import CompanyDocuments from './company/CompanyDocuments';
 
 function App() {
   return (
@@ -120,6 +122,12 @@ function App() {
         <Route path="/staff-tasks/:id" element={<StaffTaskDetail />} />
         <Route path="/staff-calendar" element={<StaffCalendar />} />
         <Route path="/staff-notification" element={<StaffNotifications />} />
+        <Route path="/staff-documents" element={<StaffDocuments />} />
+        <Route path="/staff-documents/:projectId" element={<StaffDocuments />} />
+        
+        {/* Company document routes */}
+        <Route path="/company-documents" element={<CompanyDocuments />} />
+        <Route path="/company-documents/:projectId" element={<CompanyDocuments />} />
 
         {/* Add a catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -621,10 +621,19 @@ const StaffProjectDetail = () => {
           
           {/* Project Documents Section */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <FileText className="h-5 w-5 mr-2 text-primary" />
-              Project Documents
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-primary" />
+                Project Documents
+              </h2>
+              <button
+                onClick={() => navigate(`/staff-documents/${projectId}`)}
+                className="flex items-center px-3 py-2 text-sm rounded-lg transition-all bg-primary text-white hover:bg-primary-dark"
+              >
+                <Plus size={16} className="mr-1" />
+                Manage Documents
+              </button>
+            </div>
             
             {project.documents && project.documents.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
