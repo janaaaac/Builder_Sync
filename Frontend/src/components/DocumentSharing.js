@@ -2,49 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaUserCheck, FaUserSlash, FaUsers, FaLock, FaGlobe, FaUserTag } from 'react-icons/fa';
 
-// API URL configuration
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-
-// Create axios instance with base URL and auth token
-const api = axios.create({
-  baseURL: API_URL
-});
-
-// Request interceptor for adding token
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  config.headers.Authorization = token ? `Bearer ${token}` : '';
-  return config;
-});
-
-// Response interceptor for handling 401 errors
-api.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response?.status === 401) {
-      console.error('Authentication failed in DocumentSharing component');
-      // We don't redirect here to avoid disrupting the user experience in a modal
-      return Promise.reject(error);
-    }
-    return Promise.reject(error);
-  }
-);
-
-const DocumentSharing = ({ document, onUpdatePermissions, availableUsersProp = [] }) => {
+const DocumentSharing = ({ document, onUpdatePermissions }) => {
   const [loading, setLoading] = useState(false);
   const [isPublic, setIsPublic] = useState(document?.accessControl?.isPublic || false);
   const [allowedRoles, setAllowedRoles] = useState(document?.accessControl?.allowedRoles || []);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Initialize with props on mount
-  useEffect(() => {
-    if (availableUsersProp && availableUsersProp.length > 0) {
-      console.log("Setting user list from props:", availableUsersProp.length, "users");
-      setAvailableUsers(availableUsersProp);
-    }
-  }, [availableUsersProp]);
 
   useEffect(() => {
     if (document) {
@@ -57,81 +21,51 @@ const DocumentSharing = ({ document, onUpdatePermissions, availableUsersProp = [
       }
     }
     
-    // Only fetch if no availableUsersProp was provided
-    if (!availableUsersProp || availableUsersProp.length === 0) {
-      fetchAvailableUsers();
-    }
-  }, [document, availableUsersProp]);
+    fetchAvailableUsers();
+  }, [document]);
 
   const fetchAvailableUsers = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error('Authentication token not found. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
       let projectId = null;
       if (document && document.project) {
         projectId = typeof document.project === 'object' ? document.project._id : document.project;
       }
       
       let response;
-      try {
-        if (projectId) {
-          // If document is project-specific, get users from that project
-          // This endpoint is accessible to all users assigned to the project
-          console.log(`Fetching staff for project: ${projectId}`);
-          response = await api.get(`/api/projects/${projectId}/staff`);
-          
-          if (response.data.success) {
-            console.log(`Successfully fetched ${response.data.data.length} project staff members`);
-            setAvailableUsers(response.data.data || []);
-          } else {
-            console.log("API returned success:false when fetching project staff");
-            fallbackToDocumentUsers();
+      if (projectId) {
+        // If document is project-specific, get users from that project
+        response = await axios.get(`${API_URL}/api/projects/${projectId}/staff`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
-        } else {
-          // Check user role from localStorage to avoid unnecessary API calls
-          const userRole = localStorage.getItem('userRole');
-          
-          if (userRole === 'company') {
-            // Only company users can access the staff list
-            try {
-              console.log("User is company, fetching all staff");
-              response = await api.get('/api/staff');
-              if (response.data.success) {
-                console.log(`Retrieved ${response.data.data.length} staff members`);
-                setAvailableUsers(response.data.data || []);
-              } else {
-                fallbackToDocumentUsers();
-              }
-            } catch (staffError) {
-              console.log("Error fetching all staff:", staffError.message);
-              fallbackToDocumentUsers();
-            }
-          } else {
-            // For staff users, don't even try to access /api/staff, use fallback immediately
-            console.log("User is not company role, using fallback users");
-            fallbackToDocumentUsers();
+        });
+      } else {
+        // Otherwise get all staff
+        response = await axios.get(`${API_URL}/api/staff`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
-        }
-      } catch (apiError) {
-        console.log("Error fetching users:", apiError.message);
-        fallbackToDocumentUsers();
+        });
+      }
+      
+      if (response.data.success) {
+        setAvailableUsers(response.data.data || []);
       }
     } catch (error) {
-      console.error('Error in fetchAvailableUsers:', error);
-      fallbackToDocumentUsers();
+      console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
-    }
-  };
-  
-  // Helper function to fallback to document's allowed users
-  const fallbackToDocumentUsers = () => {
-    // Just show the current document allowed users if available
-    if (document?.accessControl?.allowedUsers) {
-      console.log("Falling back to document's allowed users:", document.accessControl.allowedUsers.length);
-      setAvailableUsers(document.accessControl.allowedUsers);
-    } else {
-      console.log("No fallback users available in document");
-      setAvailableUsers([]);
     }
   };
 
@@ -233,7 +167,7 @@ const DocumentSharing = ({ document, onUpdatePermissions, availableUsersProp = [
           className="w-full p-2 border border-gray-300 rounded-md mb-3"
         />
         
-        <div className="border rounded-md overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+        <div className="border rounded-md overflow-hidden max-h-60 overflow-y-auto">
           {loading ? (
             <div className="p-4 text-center">
               <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent mx-auto"></div>
@@ -293,7 +227,7 @@ const DocumentSharing = ({ document, onUpdatePermissions, availableUsersProp = [
       {selectedUsers.length > 0 && (
         <div className="mb-6">
           <p className="text-sm font-medium text-gray-700 mb-2">Selected Users ({selectedUsers.length})</p>
-          <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+          <div className="flex flex-wrap gap-2">
             {selectedUsers.map(user => (
               <div key={user._id} className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
                 <span>{user.fullName}</span>

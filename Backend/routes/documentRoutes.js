@@ -4,12 +4,6 @@ const requireAuth = require('../middleware/requireAuth');
 const documentController = require('../controllers/documentController');
 const { handleDocumentUpload } = require('../utils/uploadDocuments');
 
-// Debug middleware to log requests
-router.use((req, res, next) => {
-  console.log(`Document API Request: ${req.method} ${req.originalUrl}`);
-  next();
-});
-
 // Auth middleware for all routes
 router.use(requireAuth);
 

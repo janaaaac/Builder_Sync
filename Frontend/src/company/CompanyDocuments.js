@@ -12,32 +12,6 @@ import CompanySidebar from './CompanySideBar';
 import DocumentSearch from '../components/DocumentSearch';
 import DocumentSharing from '../components/DocumentSharing';
 
-// Create axios instance with base URL and auth token
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-const api = axios.create({
-  baseURL: API_URL
-});
-
-// Request interceptor for adding token
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  config.headers.Authorization = token ? `Bearer ${token}` : '';
-  return config;
-});
-
-// Response interceptor for handling 401 errors
-api.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response?.status === 401) {
-      toast.error('Authentication expired. Please log in again.');
-      localStorage.clear();
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
 const CompanyDocuments = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -59,51 +33,36 @@ const CompanyDocuments = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [accessControl, setAccessControl] = useState({
     isPublic: true,
-    allowedRoles: ['project_manager', 'architect', 'engineer', 'quantity_surveyor', 'company']
+    allowedRoles: ['project_manager', 'architect', 'engineer', 'quantity_surveyor']
   });
   const [staff, setStaff] = useState([]);
   const [selectedStaffIds, setSelectedStaffIds] = useState([]);
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [documentToApprove, setDocumentToApprove] = useState(null);
   const [approvalComment, setApprovalComment] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    // Verify authentication on component mount
-    const verifyAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login', { replace: true });
-        return;
-      }
-
-      try {
-        await axios.get(`${API_URL}/api/auth/verify`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        // If verification successful, fetch documents and staff if needed
-        fetchDocuments();
-        if (projectId) {
-          fetchProjectStaff();
-        }
-      } catch (error) {
-        console.error('Authentication verification failed:', error);
-        toast.error('Authentication failed. Please log in again.');
-        localStorage.clear();
-        navigate('/login', { replace: true });
-      }
-    };
-
-    verifyAuth();
-  }, [projectId, filterCategory, navigate]);
+    fetchDocuments();
+    if (projectId) {
+      fetchProjectStaff();
+    }
+  }, [projectId, filterCategory]);
 
   const fetchDocuments = async () => {
     setLoading(true);
     try {
-      let url = '/api/documents';
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError('Authentication token not found. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      let url = `${API_URL}/api/documents`;
       if (projectId) {
-        url = `/api/documents/project/${projectId}`;
+        url = `${API_URL}/api/documents/project/${projectId}`;
       }
       
       // Add filters if any
@@ -112,7 +71,13 @@ const CompanyDocuments = () => {
         params.category = filterCategory;
       }
       
-      const response = await api.get(url, { params });
+      const response = await axios.get(url, { 
+        params,
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       if (response.data.success) {
         setDocuments(response.data.data.documents || response.data.data);
       } else {
@@ -128,7 +93,19 @@ const CompanyDocuments = () => {
 
   const fetchProjectStaff = async () => {
     try {
-      const response = await api.get(`/api/projects/staff/${projectId}`);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error('Authentication token not found. Please log in again.');
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await axios.get(`${API_URL}/api/projects/staff/${projectId}`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       if (response.data.success) {
         setStaff(response.data.data.staff || []);
       }
@@ -190,9 +167,17 @@ const CompanyDocuments = () => {
         formData.append('project', projectId);
       }
 
-      const response = await api.post('/api/documents', formData, {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error('Authentication token not found. Please log in again.');
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await axios.post(`${API_URL}/api/documents`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
         },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -226,7 +211,7 @@ const CompanyDocuments = () => {
     setSelectedStaffIds([]);
     setAccessControl({
       isPublic: true,
-      allowedRoles: ['project_manager', 'architect', 'engineer', 'quantity_surveyor', 'company']
+      allowedRoles: ['project_manager', 'architect', 'engineer', 'quantity_surveyor']
     });
   };
 
@@ -241,8 +226,20 @@ const CompanyDocuments = () => {
 
   const handleUpdateDocumentPermissions = async (documentId, accessControl) => {
     try {
-      const response = await api.put(`/api/documents/${documentId}`, {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error('Authentication token not found. Please log in again.');
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await axios.put(`${API_URL}/api/documents/${documentId}`, {
         accessControl
+      }, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.data.success) {
@@ -274,7 +271,19 @@ const CompanyDocuments = () => {
     }
 
     try {
-      const response = await api.delete(`/api/documents/${documentId}`);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error('Authentication token not found. Please log in again.');
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await axios.delete(`${API_URL}/api/documents/${documentId}`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       if (response.data.success) {
         toast.success('Document deleted successfully');
         fetchDocuments();
@@ -294,9 +303,21 @@ const CompanyDocuments = () => {
 
   const handleApproveDocument = async (approve) => {
     try {
-      const response = await api.put(`/api/documents/${documentToApprove._id}`, {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error('Authentication token not found. Please log in again.');
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await axios.put(`${API_URL}/api/documents/${documentToApprove._id}`, {
         status: approve ? 'approved' : 'rejected',
         changeNotes: approvalComment
+      }, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.data.success) {
@@ -358,18 +379,14 @@ const CompanyDocuments = () => {
     }
   };
 
-  // Handle sidebar collapse from the sidebar component
   const handleCollapseChange = (collapsed) => {
     setSidebarCollapsed(collapsed);
   };
 
-
   return (
     <div className="flex h-screen bg-gray-50">
-      <CompanySidebar onCollapseChange={handleCollapseChange} />
-      
-      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
-      <div className="flex flex-col flex-1 overflow-hidden">
+        <CompanySidebar onCollapseChange={handleCollapseChange} />
+         <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
         <main className="flex-1 overflow-y-auto p-5">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-semibold text-gray-800">
@@ -458,27 +475,9 @@ const CompanyDocuments = () => {
                       )}
                       
                       <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                        <div className="flex items-center gap-1">
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded capitalize">
-                            {doc.category}
-                          </span>
-                          {doc.accessControl?.allowedRoles?.includes('company') && (
-                            <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded flex items-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                              </svg>
-                              Company
-                            </span>
-                          )}
-                          {doc.uploaderModel === 'Staff' && (
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded flex items-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                              </svg>
-                              Staff
-                            </span>
-                          )}
-                        </div>
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded capitalize">
+                          {doc.category}
+                        </span>
                         <div className="flex space-x-2">
                           <button 
                             onClick={() => handleView(doc)}
@@ -649,33 +648,6 @@ const CompanyDocuments = () => {
                       <span className="ml-2">Make public to all project members</span>
                     </label>
                   </div>
-
-                  <div className="mb-3 border-t pt-3">
-                    <label className="inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={accessControl.allowedRoles?.includes('company')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setAccessControl({
-                              ...accessControl,
-                              allowedRoles: [...(accessControl.allowedRoles || []), 'company']
-                            });
-                          } else {
-                            setAccessControl({
-                              ...accessControl,
-                              allowedRoles: (accessControl.allowedRoles || []).filter(r => r !== 'company')
-                            });
-                          }
-                        }}
-                        className="form-checkbox"
-                      />
-                      <span className="ml-2 font-medium">Share with Company</span>
-                    </label>
-                    <p className="text-sm text-gray-500 mt-1 ml-6">
-                      Allow your company managers to view this document
-                    </p>
-                  </div>
                   
                   {!accessControl.isPublic && (
                     <div>
@@ -768,7 +740,7 @@ const CompanyDocuments = () => {
       {/* View Document Modal */}
       {showViewModal && selectedDocument && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-hidden flex flex-col">
             <div className="p-4 border-b flex justify-between items-center">
               <h2 className="text-xl font-semibold truncate">{selectedDocument.name}</h2>
               <button
@@ -783,7 +755,7 @@ const CompanyDocuments = () => {
               {selectedDocument.fileType.includes('pdf') ? (
                 <iframe
                   src={`${selectedDocument.fileUrl}#toolbar=0`}
-                  className="w-full h-full min-h-[40vh]"
+                  className="w-full h-full min-h-[70vh]"
                   title={selectedDocument.name}
                 />
               ) : selectedDocument.fileType.includes('image') ? (
@@ -791,7 +763,7 @@ const CompanyDocuments = () => {
                   <img
                     src={selectedDocument.fileUrl}
                     alt={selectedDocument.name}
-                    className="max-w-full max-h-[40vh] object-contain"
+                    className="max-w-full max-h-[70vh] object-contain"
                   />
                 </div>
               ) : (
@@ -810,23 +782,12 @@ const CompanyDocuments = () => {
               )}
             </div>
             
-            <div className="p-4 border-t bg-gray-50 overflow-y-auto max-h-[50vh] custom-scrollbar">
+            <div className="p-4 border-t bg-gray-50">
               <div className="flex flex-wrap gap-6 mb-4">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-500">Uploaded By</h3>
-                  <p className="text-gray-800 flex items-center">
+                  <p className="text-gray-800">
                     {selectedDocument.uploadedBy?.fullName || selectedDocument.uploadedBy?.companyName || 'Unknown'}
-                    {selectedDocument.uploaderModel && (
-                      <span className={`ml-2 text-xs px-2 py-1 rounded ${
-                        selectedDocument.uploaderModel === 'Staff' 
-                          ? 'bg-green-100 text-green-800' 
-                          : selectedDocument.uploaderModel === 'Company'
-                            ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {selectedDocument.uploaderModel}
-                      </span>
-                    )}
                   </p>
                 </div>
                 <div>
@@ -852,94 +813,6 @@ const CompanyDocuments = () => {
               {/* Sharing settings for company users */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold mb-4">Sharing & Permissions</h3>
-                
-                <div className="max-h-60 overflow-y-auto pr-2 mb-4 custom-scrollbar">
-                  <div className="flex flex-wrap gap-2 mt-1 mb-4">
-                    {selectedDocument.accessControl?.isPublic ? (
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                        </svg>
-                        Public to all project members
-                      </span>
-                    ) : (
-                      <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                        </svg>
-                        Restricted access
-                      </span>
-                    )}
-                    
-                    {selectedDocument.accessControl?.allowedRoles?.includes('company') && (
-                      <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                        </svg>
-                        Shared with Company
-                      </span>
-                    )}
-                    
-                    {selectedDocument.accessControl?.allowedRoles?.filter(role => role !== 'company').length > 0 && (
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                        </svg>
-                        Shared with roles: {selectedDocument.accessControl?.allowedRoles?.filter(role => role !== 'company').map(role => 
-                          role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-                        ).join(', ')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Toggle company access */}
-                {selectedDocument.uploaderModel === 'Company' && 
-                 selectedDocument.uploadedBy?._id === localStorage.getItem('userId') && (
-                  <div className="mt-3 mb-4">
-                    <button
-                      onClick={() => {
-                        // Create a copy of the current access control settings
-                        const updatedAccessControl = { 
-                          ...selectedDocument.accessControl,
-                          allowedRoles: [...(selectedDocument.accessControl?.allowedRoles || [])]
-                        };
-                        
-                        // Toggle the company role
-                        if (updatedAccessControl.allowedRoles.includes('company')) {
-                          updatedAccessControl.allowedRoles = updatedAccessControl.allowedRoles.filter(role => role !== 'company');
-                        } else {
-                          updatedAccessControl.allowedRoles.push('company');
-                        }
-                        
-                        // Update document access control
-                        handleUpdateDocumentPermissions(selectedDocument._id, updatedAccessControl);
-                      }}
-                      className={`mt-2 text-sm px-3 py-1 rounded border flex items-center ${
-                        selectedDocument.accessControl?.allowedRoles?.includes('company')
-                          ? 'border-red-300 text-red-600 hover:bg-red-50'
-                          : 'border-purple-300 text-purple-600 hover:bg-purple-50'
-                      }`}
-                    >
-                      {selectedDocument.accessControl?.allowedRoles?.includes('company') ? (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                          </svg>
-                          Remove company access
-                        </>
-                      ) : (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                          </svg>
-                          Share with company
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-                
                 <DocumentSharing 
                   document={selectedDocument}
                   onUpdatePermissions={(accessControl) => {
@@ -1077,7 +950,6 @@ const CompanyDocuments = () => {
           </div>
         </div>
       )}
-    </div>
     </div>
   );
 };

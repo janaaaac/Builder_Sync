@@ -7,19 +7,26 @@ const Staff = require("../models/Staff"); // Make sure to import Staff model
 
 // Generate JWT Token with enhanced user information
 const generateToken = (user, role) => {
+  console.log(`Generating token for ${role} with ID ${user._id}`);
+  
   // Base payload for all user types
   const payload = {
     id: user._id,
     role,
     isApproved: user.isApproved || role === 'admin',
-    email: user.email
+    email: user.email,
+    createdAt: new Date().getTime()
   };
   
-  // Add staff-specific data to the token
+  // Add role-specific data to the token
   if (role === 'staff') {
     payload.isFirstLogin = user.isFirstLogin;
     payload.staffRole = user.role;  // The specific role within staff (engineer, manager, etc.)
     payload.company = user.company;  // Company ID that staff belongs to
+  } else if (role === 'company') {
+    payload.companyName = user.companyName;
+  } else if (role === 'client') {
+    payload.fullName = user.fullName;
   }
 
   return jwt.sign(
@@ -32,6 +39,7 @@ const generateToken = (user, role) => {
 // Unified login for Admin, Client, Company, and Staff
 const login = async (req, res) => {
   try {
+    console.log("Login attempt received:", req.body);
     const { email, password } = req.body;
 
     // Trim and validate input
@@ -39,6 +47,7 @@ const login = async (req, res) => {
     const trimmedPassword = password?.trim();
     
     if (!trimmedEmail || !trimmedPassword) {
+      console.log("Missing email or password in request");
       return res.status(400).json({ 
         success: false,
         message: "Email and password are required" 
@@ -47,15 +56,20 @@ const login = async (req, res) => {
 
     let user;
     let role;
+    let specificRole = null;
 
     // Check in all user types with case-insensitive email
     const emailRegex = new RegExp(`^${trimmedEmail}$`, 'i');
+    console.log("Searching for user with email pattern:", emailRegex);
     
     if ((user = await Admin.findOne({ email: emailRegex }))) {
       role = "admin";
+      console.log("Found user in Admin collection");
     } else if ((user = await Client.findOne({ email: emailRegex }))) {
       role = "client";
+      console.log("Found user in Client collection");
       if (!user.isApproved) {
+        console.log("Client account not approved");
         return res.status(403).json({ 
           success: false,
           message: "Your account is pending approval" 
@@ -63,23 +77,29 @@ const login = async (req, res) => {
       }
     } else if ((user = await Company.findOne({ email: emailRegex }))) {
       role = "company";
+      console.log("Found user in Company collection");
       if (!user.isApproved) {
+        console.log("Company account not approved");
         return res.status(403).json({ 
           success: false,
           message: "Your account is pending approval" 
         });
       }
     } else if ((user = await Staff.findOne({ email: emailRegex }))) {
-      role = "staff";// use actual staff role (project_manager, architect, engineer, quantity_surveyor)
+      role = "staff"; // Always use "staff" for the main role
+      specificRole = user.role; // Store the specific staff role (project_manager, architect, etc.)
+      console.log(`Found user in Staff collection with specific role: ${specificRole}`);
       
       // Staff approval check
       if (!user.isApproved) {
+        console.log("Staff account not approved");
         return res.status(403).json({ 
           success: false,
           message: "Your staff account is pending approval" 
         });
       }
     } else {
+      console.log("No user found with the provided email");
       return res.status(401).json({ 
         success: false,
         message: "Invalid email or password" 
@@ -87,13 +107,16 @@ const login = async (req, res) => {
     }
 
     // Check Password
+    console.log("Validating password...");
     const isMatch = await user.matchPassword(trimmedPassword);
     if (!isMatch) {
+      console.log("Password validation failed");
       return res.status(401).json({ 
         success: false,
         message: "Invalid email or password" 
       });
     }
+    console.log("Password validation successful");
 
     // Generate JWT Token
     const token = generateToken(user, role);
@@ -107,12 +130,11 @@ const login = async (req, res) => {
         id: user._id,
         email: user.email,
         role,
-        isApproved: role === 'staff' || role === 'admin' ? true : user.isApproved,
-        isFirstLogin: role === 'staff' ? user.isFirstLogin : undefined // Make sure this is included
+        isApproved: user.isApproved || role === 'admin',
+        isFirstLogin: role === 'staff' ? user.isFirstLogin : false
       }
     };
     
-
     // Add role-specific properties
     switch(role) {
       case 'company':
@@ -129,20 +151,34 @@ const login = async (req, res) => {
         break;
       case 'staff':
         responseData.user.fullName = user.fullName;
-        responseData.user.role = user.role; // Specific staff role (engineer, etc.)
+        responseData.user.staffRole = user.role; // Store specific staff role (engineer, etc.)
+        responseData.user.specificRole = user.role; // Additional property for clarity
+        responseData.user.role = 'staff'; // Make sure the main role is always 'staff'
         responseData.user.company = user.company;
         responseData.user.profilePicture = user.profilePicture;
+        responseData.user.isFirstLogin = user.isFirstLogin;
         break;
     }
+
+    console.log("Login successful, responding with:", {
+      success: responseData.success,
+      role: responseData.user.role,
+      staffRole: responseData.user.staffRole,
+      specificRole: responseData.user.specificRole,
+      isFirstLogin: responseData.user.isFirstLogin
+    });
 
     res.status(200).json(responseData);
 
   } catch (error) {
     console.error("Login Error:", error);
+    const errorMessage = error.message || "An unexpected error occurred";
+    console.log("Responding with error:", errorMessage);
     res.status(500).json({ 
       success: false,
-      message: "Server error",
-      error: error.message 
+      message: "Server error during login process",
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

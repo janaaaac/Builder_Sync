@@ -66,8 +66,8 @@ function App() {
         <Route path="/register-category" element={<RegistrationCategory />} />
 
         {/* Auth routes */}
-        <Route path="/login" element={<LoginTest />} />
-        {/* <Route path="/login" element={<LoginPage />} /> */}
+        {/* <Route path="/login" element={<LoginTest />} /> */}
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/client-registration" element={<ClientRegister/>} />
         <Route path="/company-registration" element={<CompanyRegister />} />
         <Route path="/forgot-password" element={<ForgetPasswordPage />} />

@@ -22,9 +22,6 @@ router.get('/staff/:projectId', requireAuth, projectController.getStaffProjectDe
 // Add staff to a project (company only)
 router.post('/:projectId/add-staff', requireAuth, requireRole('company'), projectController.addStaffToProject);
 
-// Get staff assigned to a project
-router.get('/:projectId/staff', requireAuth, projectController.getProjectStaff);
-
 // Create a project from a proposal (client only)
 router.post('/from-proposal/:proposalId', requireAuth, requireRole('client'), projectController.createProjectFromProposal);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
@@ -11,6 +11,14 @@ import {
   AlertCircle, 
   LogIn 
 } from 'lucide-react';
+
+// API URL configuration
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: API_URL
+});
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -25,7 +33,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   
-  // Add this function to handle navigation
+  // Handle navigation
   const handleNavigation = (path) => {
     navigate(path);
   };
@@ -85,23 +93,27 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      // Make the actual API call to the backend
-      const response = await axios.post('http://localhost:5001/api/auth/login', {
+      console.log("Starting login request to:", `${API_URL}/api/auth/login`);
+      
+      // Make API call to the backend
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         email: formData.email,
         password: formData.password
       });
       
+      // Log the response for debugging
+      console.log("Login response:", response.data);
+      
       if (response.data.success) {
-        // Store token in localStorage
+        // Store authentication data in local storage
         localStorage.setItem('token', response.data.token);
-        
-        // Store user ID in localStorage - this is needed for notifications
         localStorage.setItem('userId', response.data.user.id);
-        
-        // Store user role
         localStorage.setItem('userRole', response.data.user.role);
         
-        // Store other useful user data
+        // Store user data as JSON for more comprehensive access
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Store user display name based on role
         if (response.data.user.fullName) {
           localStorage.setItem('userName', response.data.user.fullName);
         } else if (response.data.user.companyName) {
@@ -110,29 +122,71 @@ const LoginPage = () => {
           localStorage.setItem('userName', response.data.user.username);
         }
         
+        // Log important login details
         console.log('Login Successful', response.data);
+        console.log("User role:", response.data.user.role);
+        console.log("Staff specific role:", response.data.user.staffRole || response.data.user.specificRole);
+        console.log("isFirstLogin flag:", response.data.user.isFirstLogin);
         
-        // Redirect based on user role
-        if (response.data.user.role === 'client') {
-          navigate('/client/dashboard');
-        } else if (response.data.user.role === 'company') {
-          navigate('/company/dashboard');
-        } else if (response.data.user.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else if (response.data.user.role === 'staff') {
-          // Check if it's first login for staff
-          if (response.data.user.isFirstLogin) {
-            navigate('/staff/first-login');
-          } else {
-            navigate('/staff/dashboard');
-          }
+        // Store staff role if available
+        if (response.data.user.staffRole || response.data.user.specificRole) {
+          localStorage.setItem('staffRole', response.data.user.staffRole || response.data.user.specificRole);
         }
+
+        // Check for special account states
+        if (response.data.user.role === 'company' && !response.data.user.isApproved) {
+          console.log("Company not approved - redirecting to pending-approval");
+          navigate('/pending-approval', { replace: true });
+          return;
+        }
+        
+        // Check if user is a staff member (any staff role)
+        const staffRoles = ['project_manager', 'architect', 'engineer', 'quantity_surveyor', 'qs'];
+        const isStaffMember = staffRoles.includes(response.data.user.role);
+        
+        console.log("Checking staff role:", response.data.user.role, "Is staff member:", isStaffMember);
+
+        // Handle staff first login scenario
+        if (isStaffMember && response.data.user.isFirstLogin) {
+          console.log("Staff first login detected - redirecting to /first-login");
+          navigate('/first-login', { replace: true });
+          return;
+        }
+        
+        // STEP 3: Route to appropriate dashboard
+        const getDashboardPath = (user) => {
+          if (user.role === "admin") return "/admin-dashboard";
+          if (user.role === "client") return "/client-dashboard";
+          if (user.role === "company") return "/company-dashboard";
+          
+          // If the role is staff OR it's one of the staff-specific roles
+          if (user.role === "staff" || isStaffMember) {
+            console.log("Detected staff member, redirecting to staff dashboard");
+            return "/staff-dashboard";
+          }
+          
+          // Default path if no matching role
+          return "/";
+        };
+
+        const targetPath = getDashboardPath(response.data.user);
+        console.log(`Redirecting to ${targetPath} for ${response.data.user.role} role`);
+        navigate(targetPath, { replace: true });
       } else {
         // Handle failed login despite 200 status
         setLoginError(response.data.message || 'Login failed. Please try again.');
       }
     } catch (error) {
-      console.error('Login Error', error);
+      console.error('Login Error details:', error);
+      
+      // Log detailed error information for debugging
+      if (error.response) {
+        console.error("Server response:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("No response received from server");
+      } else {
+        console.error("Error setting up request:", error.message);
+      }
       
       // Set appropriate error message based on response
       if (error.response && error.response.data) {
@@ -338,7 +392,7 @@ const LoginPage = () => {
           <p className="text-[#737373]">
             Don't have an account?{' '}
             <a 
-              href="#" 
+              href="/register-category" 
               className="text-[#EA540C] hover:text-[#EA540C]/80 transition-colors"
             >
               Register Now

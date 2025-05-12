@@ -97,14 +97,6 @@ exports.createDocument = async (req, res) => {
       }
     });
 
-    // Log document details for debugging
-    console.log('Document being created:', {
-      name: document.name,
-      uploadedBy: document.uploadedBy,
-      uploaderModel: document.uploaderModel,
-      accessControl: document.accessControl
-    });
-
     await document.save();
 
     // If project-specific document, notify relevant users
@@ -206,11 +198,6 @@ exports.getDocumentById = async (req, res) => {
 
     // Check if user has access to this document
     const hasAccess = await checkDocumentAccess(req.user, document);
-    
-    // Log document access for debugging
-    console.log(`User ${req.user._id} (${req.user.role}) access to document ${documentId}: ${hasAccess}`);
-    console.log(`Document uploader: ${document.uploaderModel}, allowedRoles: ${JSON.stringify(document.accessControl.allowedRoles)}`);
-    
     if (!hasAccess) {
       return res.status(403).json({
         success: false,
@@ -511,7 +498,6 @@ const buildDocumentQuery = (user, filters) => {
     query.$or = [
       { 'uploadedBy': user._id, 'uploaderModel': 'Company' },
       { 'accessControl.allowedUsers': user._id, 'accessControl.userModel': 'Company' },
-      { 'accessControl.allowedRoles': { $in: ['company'] } }, // Properly query for array membership
       // Documents from their projects
       {
         'project': { $in: user.projects || [] }
@@ -522,7 +508,6 @@ const buildDocumentQuery = (user, filters) => {
     query.$or = [
       { 'uploadedBy': user._id, 'uploaderModel': 'Client' },
       { 'accessControl.allowedUsers': user._id, 'accessControl.userModel': 'Client' },
-      { 'accessControl.allowedRoles': { $in: ['client'] } }, // Properly query for array membership
       // Documents from their projects
       {
         'project': { $in: user.projects || [] }
@@ -533,7 +518,7 @@ const buildDocumentQuery = (user, filters) => {
     query.$or = [
       { 'uploadedBy': user._id, 'uploaderModel': 'Staff' },
       { 'accessControl.isPublic': true },
-      { 'accessControl.allowedRoles': { $in: [user.role, 'staff'] } }, // Properly query for array membership, including generic staff role
+      { 'accessControl.allowedRoles': user.role },
       { 'accessControl.allowedUsers': user._id, 'accessControl.userModel': 'Staff' }
     ];
   }
@@ -558,18 +543,7 @@ const checkDocumentAccess = async (user, document) => {
   }
 
   // Role-based access
-  if (document.accessControl.allowedRoles && Array.isArray(document.accessControl.allowedRoles)) {
-    if (document.accessControl.allowedRoles.includes(user.role)) {
-      console.log(`User role ${user.role} has access to document ${document._id} via role-based access`);
-      return true;
-    }
-  }
-  
-  // Special case for company role
-  if (user.role === 'company' && document.accessControl.allowedRoles && 
-      Array.isArray(document.accessControl.allowedRoles) && 
-      document.accessControl.allowedRoles.includes('company')) {
-    console.log('Company user accessing document shared with company role:', document._id);
+  if (document.accessControl.allowedRoles.includes(user.role)) {
     return true;
   }
 

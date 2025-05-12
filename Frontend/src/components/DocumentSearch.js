@@ -2,33 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaSearch, FaFile, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage } from 'react-icons/fa';
 
-// API URL configuration
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-
-// Create axios instance with base URL and auth token
-const api = axios.create({
-  baseURL: API_URL
-});
-
-// Request interceptor for adding token
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  config.headers.Authorization = token ? `Bearer ${token}` : '';
-  return config;
-});
-
-// Response interceptor for handling 401 errors
-api.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response?.status === 401) {
-      console.error('Authentication failed in DocumentSearch component');
-      return Promise.reject(error);
-    }
-    return Promise.reject(error);
-  }
-);
-
 const DocumentSearch = ({ onSelectDocument, projectId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -50,14 +23,28 @@ const DocumentSearch = ({ onSelectDocument, projectId }) => {
   const performSearch = async () => {
     setIsSearching(true);
     try {
-      let url = '/api/documents';
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error('Authentication token not found. Please log in again.');
+        setIsSearching(false);
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      let url = `${API_URL}/api/documents`;
       const params = { search: searchTerm };
       
       if (projectId) {
-        url = `/api/documents/project/${projectId}`;
+        url = `${API_URL}/api/documents/project/${projectId}`;
       }
       
-      const response = await api.get(url, { params });
+      const response = await axios.get(url, { 
+        params,
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       if (response.data.success) {
         setSearchResults(response.data.data.documents || response.data.data);
         setShowResults(true);
