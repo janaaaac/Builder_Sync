@@ -10,6 +10,7 @@ import {
   Setting2,
   Profile2User,
   DocumentText,
+  Briefcase // Added for Tools icon, assuming it exists or using Setting2 as fallback
 } from "iconsax-react";
 import axios from "axios";
 
@@ -116,11 +117,11 @@ const StaffSidebar = ({ onCollapseChange }) => {
       case "Settings":
         navigate('/staff-settings');
         break;
-      case "Reports":
-        navigate('/staff-reports');
-        break;
       case "Chat":
         navigate('/staff-chat');
+        break;
+      case "Tools": // Added Tools case
+        navigate('/qs-tools');
         break;
       default:
         break;
@@ -265,7 +266,8 @@ const StaffSidebar = ({ onCollapseChange }) => {
             { name: "Chat", icon: MessageNotif },
             { name: "Documents", icon: DocumentText },
             { name: "Team", icon: Profile2User },
-            { name: "Reports", icon: StatusUp },
+            // Conditionally add Tools menu item
+            ...(staffData.role === 'quantity_surveyor' || staffData.role === 'qs' ? [{ name: "Tools", icon: Briefcase }] : []),
             { name: "Settings", icon: Setting2 },
           ].map((item) => (
             <li

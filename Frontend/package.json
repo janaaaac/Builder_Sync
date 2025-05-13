@@ -13,6 +13,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^0.27.2",
     "date-fns": "^4.1.0",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.6.2",
     "iconsax-react": "^0.0.8",
     "lucide-react": "^0.484.0",
@@ -26,7 +27,8 @@
     "react-toastify": "^11.0.5",
     "react-type-animation": "^3.2.0",
     "socket.io-client": "^4.8.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",

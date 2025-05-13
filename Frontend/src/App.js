@@ -56,8 +56,9 @@ import StaffCalendar from './Staff/StaffCalendar';
 import StaffTaskDetail from './Staff/StaffTaskDetail';
 import StaffDocuments from './Staff/StaffDocuments';
 import CompanyDocuments from './company/CompanyDocuments';
-import BlueprintUploader from './Staff/QS';
+// import BlueprintUploader from './Staff/QS'; // Removed this problematic import
 import CompanyProjectDetail from './company/CompanyProjectDetail';
+import QsTools from './Staff/QsTools';
 
 function App() {
   return (
@@ -132,8 +133,13 @@ function App() {
         <Route path="/company-documents" element={<CompanyDocuments />} />
         <Route path="/company-documents/:projectId" element={<CompanyDocuments />} />
 
-        <Route path="/qs" element={<BlueprintUploader />} />
 
+        {/* Blueprint Uploader route */}
+        <Route path="/qs-tools" element={<QsTools/>} />
+
+        {/* Chat system route */}
+
+        
         {/* Add a catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
