@@ -394,7 +394,7 @@ const CompanyDocuments = () => {
             </h1>
             <button
               onClick={() => setShowUploadModal(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full flex items-center"
             >
               <FaUpload className="mr-2" /> Upload Document
             </button>
@@ -458,6 +458,20 @@ const CompanyDocuments = () => {
                           </p>
                           {getStatusBadge(doc.status)}
                         </div>
+                        {/* Uploader info */}
+                        {doc.uploadedBy && (
+                          <div className="mt-1 text-xs text-gray-600 flex items-center gap-2">
+                            <span>Uploaded by:</span>
+                            <span className="font-medium">{doc.uploadedBy.fullName || doc.uploadedBy.companyName || 'Unknown'}</span>
+                            {doc.uploadedBy.role && (
+                              <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full ml-1">{doc.uploadedBy.role.replace('_', ' ')}</span>
+                            )}
+                            {/* Essential badge for staff uploads */}
+                            {doc.uploadedBy.role === 'staff' && (
+                              <span className="ml-2 bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-semibold">Essential</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -608,7 +622,7 @@ const CompanyDocuments = () => {
                   <button
                     type="button"
                     onClick={addTag}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-md"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-r-full"
                   >
                     <FaTags />
                   </button>
@@ -720,13 +734,13 @@ const CompanyDocuments = () => {
                     setShowUploadModal(false);
                     resetUploadForm();
                   }}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-100"
+                  className="px-4 py-2 border border-orange-500 text-orange-500 hover:bg-orange-50 rounded-full"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full flex items-center"
                   disabled={!selectedFile || !documentName}
                 >
                   <FaUpload className="mr-2" /> Upload
@@ -786,8 +800,14 @@ const CompanyDocuments = () => {
               <div className="flex flex-wrap gap-6 mb-4">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-500">Uploaded By</h3>
-                  <p className="text-gray-800">
+                  <p className="text-gray-800 flex items-center gap-2">
                     {selectedDocument.uploadedBy?.fullName || selectedDocument.uploadedBy?.companyName || 'Unknown'}
+                    {selectedDocument.uploadedBy?.role && (
+                      <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full ml-1">{selectedDocument.uploadedBy.role.replace('_', ' ')}</span>
+                    )}
+                    {selectedDocument.uploadedBy?.role === 'staff' && (
+                      <span className="ml-2 bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-semibold">Essential</span>
+                    )}
                   </p>
                 </div>
                 <div>
@@ -813,13 +833,15 @@ const CompanyDocuments = () => {
               {/* Sharing settings for company users */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold mb-4">Sharing & Permissions</h3>
-                <DocumentSharing 
-                  document={selectedDocument}
-                  onUpdatePermissions={(accessControl) => {
-                    // Update document access control
-                    handleUpdateDocumentPermissions(selectedDocument._id, accessControl);
-                  }}
-                />
+                <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                  <DocumentSharing 
+                    document={selectedDocument}
+                    onUpdatePermissions={(accessControl) => {
+                      // Update document access control
+                      handleUpdateDocumentPermissions(selectedDocument._id, accessControl);
+                    }}
+                  />
+                </div>
               </div>
               
               <div className="mt-4">
@@ -923,25 +945,22 @@ const CompanyDocuments = () => {
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    setApproveModalOpen(false);
-                    setApprovalComment('');
-                  }}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-100"
+                  onClick={() => { setApproveModalOpen(false); setDocumentToApprove(null); setApprovalComment(''); }}
+                  className="px-4 py-2 border border-orange-500 text-orange-500 hover:bg-orange-50 rounded-full"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApproveDocument(false)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center"
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full flex items-center"
                 >
                   <FaTimesCircle className="mr-2" /> Reject
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApproveDocument(true)}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full flex items-center"
                 >
                   <FaCheckCircle className="mr-2" /> Approve
                 </button>

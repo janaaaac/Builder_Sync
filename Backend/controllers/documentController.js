@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 
 // Create a new document
 exports.createDocument = async (req, res) => {
+  console.log('[createDocument] Received request'); // New log
   try {
     const {
       name,
@@ -49,25 +50,27 @@ exports.createDocument = async (req, res) => {
 
     // Ensure files were uploaded
     if (!req.files || Object.keys(req.files).length === 0) {
+      console.log('[createDocument] No files uploaded'); // New log
       return res.status(400).json({
         success: false,
         message: 'No files uploaded'
       });
     }
+    console.log('[createDocument] Files received:', req.files); // New log
 
     // Process the uploaded file
     const file = req.files.document[0]; // Get the first uploaded file
+    console.log('[createDocument] Processing file:', file); // New log
     
     // Determine file URL based on storage type
     let fileUrl;
     if (file.location) {
       // S3 storage
       fileUrl = file.location;
+      console.log('[createDocument] File location (S3):', fileUrl); // New log
     } else {
-      // Local storage - create a URL path
-      fileUrl = `/uploads/documents/${file.filename}`;
+      console.log('[createDocument] File location not found, this implies not S3 or error in upload.'); // New log
     }
-    
     // Determine uploader model based on user role
     let uploaderModel;
     if (req.user.role === 'company') {
@@ -96,8 +99,10 @@ exports.createDocument = async (req, res) => {
         allowedRoles: [req.user.role]
       }
     });
+    console.log('[createDocument] Document object to save:', document); // New log
 
     await document.save();
+    console.log('[createDocument] Document saved successfully'); // New log
 
     // If project-specific document, notify relevant users
     if (project) {
@@ -111,6 +116,7 @@ exports.createDocument = async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating document:', error);
+    console.error('[createDocument] Full error object:', JSON.stringify(error, null, 2)); // New log for full error
     return res.status(500).json({
       success: false,
       message: 'Server error uploading document',

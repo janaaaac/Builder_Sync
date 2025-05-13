@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CompanySidebar from './CompanySideBar';
 import { Building, Calendar, MapPin, DollarSign, Users, Clock, CheckCircle, FileText, ArrowLeft, Upload, Download, Trash2, Plus, X, ClipboardList, FileUp, AlertCircle } from 'lucide-react';
+import { Modal } from 'react-responsive-modal'; // If you use a modal library, otherwise use a custom modal
+import 'react-responsive-modal/styles.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
@@ -12,6 +14,12 @@ const CompanyProjectDetail = () => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [allStaff, setAllStaff] = useState([]);
+  const [selectedStaff, setSelectedStaff] = useState([]);
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState('');
+  const [staffSearch, setStaffSearch] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -36,6 +44,64 @@ const CompanyProjectDetail = () => {
 
   const handleSidebarCollapse = (collapsed) => {
     setSidebarCollapsed(collapsed);
+  };
+
+  const fetchAllStaff = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.get(`${API_URL}/api/staff`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (data.success) setAllStaff(data.data);
+    } catch (err) {
+      setAssignError('Failed to fetch staff list.');
+    }
+  };
+
+  const openAssignModal = () => {
+    setShowAssignModal(true);
+    fetchAllStaff();
+  };
+  const closeAssignModal = () => {
+    setShowAssignModal(false);
+    setSelectedStaff([]);
+    setAssignError('');
+  };
+
+  const handleStaffSelect = (staffId) => {
+    setSelectedStaff(prev =>
+      prev.includes(staffId)
+        ? prev.filter(id => id !== staffId)
+        : [...prev, staffId]
+    );
+  };
+
+  const handleAssignStaff = async () => {
+    setAssigning(true);
+    setAssignError('');
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.post(
+        `${API_URL}/api/projects/${projectId}/add-staff`, // <-- fixed endpoint
+        { staffIds: selectedStaff },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        // Refresh project data
+        const { data: projData } = await axios.get(
+          `${API_URL}/api/projects/${projectId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (projData.success) setProject(projData.data);
+        closeAssignModal();
+      } else {
+        setAssignError(data.message || 'Failed to assign staff.');
+      }
+    } catch (err) {
+      setAssignError('Failed to assign staff.');
+    } finally {
+      setAssigning(false);
+    }
   };
 
   if (loading) return (
@@ -169,10 +235,18 @@ const CompanyProjectDetail = () => {
           </div>
           {/* Team Members Section */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Users className="h-5 w-5 mr-2 text-orange-500" />
-              Team Members
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center">
+                <Users className="h-5 w-5 mr-2 text-orange-500" />
+                Team Members
+              </h2>
+              <button
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm font-medium shadow"
+                onClick={openAssignModal}
+              >
+                Assign Team
+              </button>
+            </div>
             {(project.staff || []).length > 0 ? (
               <div className="overflow-x-auto">
                 <div className="overflow-hidden border border-gray-200 rounded-lg">
@@ -212,6 +286,65 @@ const CompanyProjectDetail = () => {
               </div>
             ) : (
               <p className="text-gray-500 italic">No team members assigned yet.</p>
+            )}
+            {/* Assign Modal */}
+            {showAssignModal && (
+              <Modal open={showAssignModal} onClose={closeAssignModal} center>
+                <h3 className="text-lg font-semibold mb-2">Assign Team Members</h3>
+                {assignError && <div className="text-red-500 text-sm mb-2">{assignError}</div>}
+                <input
+                  type="text"
+                  placeholder="Search staff by name or role..."
+                  className="w-full mb-3 px-3 py-2 border border-gray-200 rounded text-sm"
+                  value={staffSearch}
+                  onChange={e => setStaffSearch(e.target.value)}
+                />
+                <div className="max-h-64 overflow-y-auto mb-4">
+                  {allStaff.length === 0 ? (
+                    <div className="text-gray-500">No staff available.</div>
+                  ) : (
+                    <ul>
+                      {allStaff
+                        .filter(staff =>
+                          staff.fullName.toLowerCase().includes(staffSearch.toLowerCase()) ||
+                          (staff.role && staff.role.toLowerCase().includes(staffSearch.toLowerCase()))
+                        )
+                        .map(staff => {
+                          const alreadyAssigned = (project.staff || []).some(s => s._id === staff._id);
+                          return (
+                            <li key={staff._id} className="flex items-center mb-2">
+                              <img
+                                src={staff.profilePicture || '/Assets/default-avatar.png'}
+                                alt={staff.fullName}
+                                className="w-7 h-7 rounded-full object-cover border mr-2"
+                                onError={e => { e.target.onerror = null; e.target.src = '/Assets/default-avatar.png'; }}
+                              />
+                              <input
+                                type="checkbox"
+                                id={`staff-${staff._id}`}
+                                checked={selectedStaff.includes(staff._id) || alreadyAssigned}
+                                onChange={() => handleStaffSelect(staff._id)}
+                                className="mr-2"
+                                disabled={alreadyAssigned}
+                              />
+                              <label htmlFor={`staff-${staff._id}`}>{staff.fullName} <span className="text-xs text-gray-500 ml-1">({staff.role})</span>{alreadyAssigned && <span className="ml-1 text-green-500 text-xs">(Assigned)</span>}</label>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <button onClick={closeAssignModal} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+                  <button
+                    onClick={handleAssignStaff}
+                    className="px-4 py-2 bg-orange-500 text-white rounded disabled:opacity-50"
+                    disabled={assigning || selectedStaff.length === 0}
+                  >
+                    {assigning ? 'Assigning...' : 'Assign'}
+                  </button>
+                </div>
+              </Modal>
             )}
           </div>
           {/* Project Documents Section */}

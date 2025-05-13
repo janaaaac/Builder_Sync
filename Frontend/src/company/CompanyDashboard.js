@@ -26,6 +26,13 @@ export default function CompanyDashboard() {
     loading: false
   });
 
+  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [projectFilter, setProjectFilter] = useState('');
+  const [taskFilter, setTaskFilter] = useState('');
+  const [filteredProjects, setFilteredProjects] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
+
   // Add Total revenue stat
   const stats = [
     { title: 'Total revenue', value: '$0', icon: 'chart' },
@@ -60,61 +67,6 @@ export default function CompanyDashboard() {
       total: `/${staffStats.limit}`, 
       icon: 'user' 
     },
-  ];
-
-  // Construction-related dummy projects
-  const projects = [
-    { 
-      name: 'Skyline Tower Construction', 
-      manager: 'Ava Mason', 
-      dueDate: 'May 25, 2025', 
-      status: 'Completed' 
-    },
-    { 
-      name: 'Greenfield Mall Renovation', 
-      manager: 'Liam Carter', 
-      dueDate: 'Jun 20, 2025', 
-      status: 'Delayed' 
-    },
-    { 
-      name: 'Sunrise Apartments Build', 
-      manager: 'Olivia Turner', 
-      dueDate: 'July 13, 2025', 
-      status: 'At risk' 
-    },
-    { 
-      name: 'Harbor Bridge Expansion', 
-      manager: 'Noah Bennett', 
-      dueDate: 'Dec 20, 2025', 
-      status: 'Completed' 
-    }
-  ];
-
-  // Construction-related dummy tasks
-  const tasks = [
-    { 
-      name: 'Site inspection for Skyline Tower', 
-      status: 'Approved' 
-    },
-    { 
-      name: 'Review safety protocols for Greenfield Mall', 
-      status: 'In review' 
-    },
-    { 
-      name: 'Finalize blueprints for Sunrise Apartments', 
-      status: 'In review' 
-    },
-    { 
-      name: 'Order materials for Harbor Bridge', 
-      status: 'On going' 
-    }
-  ];
-
-  // Construction-related dummy team
-  const team = [
-    { name: 'Billy Parker', role: 'SITE ENGINEER' },
-    { name: 'Nancy Salmon', role: 'PROJECT MANAGER' },
-    { name: 'Stella Maxwell', role: 'ARCHITECT' }
   ];
 
   // Helper function to get appropriate color for status
@@ -303,6 +255,81 @@ export default function CompanyDashboard() {
     fetchStaffStats();
   }, []);
 
+  // Fetch real projects from backend (company endpoint)
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:5001/api/projects/company', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data.success && response.data.data) {
+          setProjects(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  // Fetch real tasks from backend
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:5001/api/tasks', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data.success && response.data.data) {
+          setTasks(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+  // Filter projects and tasks
+  useEffect(() => {
+    setFilteredProjects(
+      projects.filter(p =>
+        (p.name && p.name.toLowerCase().includes(projectFilter.toLowerCase())) ||
+        (p.manager && typeof p.manager === 'string' && p.manager.toLowerCase().includes(projectFilter.toLowerCase())) ||
+        (p.status && p.status.toLowerCase().includes(projectFilter.toLowerCase()))
+      )
+    );
+  }, [projects, projectFilter]);
+
+  useEffect(() => {
+    setFilteredTasks(
+      tasks.filter(t =>
+        (t.name && t.name.toLowerCase().includes(taskFilter.toLowerCase())) ||
+        (t.status && t.status.toLowerCase().includes(taskFilter.toLowerCase()))
+      )
+    );
+  }, [tasks, taskFilter]);
+
+  // Helper to determine if project is overdue or at risk
+  const isOverdue = (project) => {
+    if (!project.dueDate) return false;
+    const due = new Date(project.dueDate);
+    return due < new Date() && project.status !== 'Completed';
+  };
+  const isAtRisk = (project) => project.status && project.status.toLowerCase().includes('risk');
+
+  // Helper to get project progress (assume project.progress is 0-100)
+  const getProjectProgress = (project) => project.progress || 0;
+
+  // Helper to get project name with fallback
+  const getProjectName = (project) => {
+    if (project.name && project.name.trim()) return project.name;
+    if (project.title && project.title.trim()) return project.title;
+    if (project.projectTitle && project.projectTitle.trim()) return project.projectTitle;
+    return '-';
+  };
+
   // Navigate to staff management page
   const handleInviteNewTeamMember = () => {
     navigate('/staff-management');
@@ -377,18 +404,13 @@ export default function CompanyDashboard() {
                   <div className="flex justify-between items-center">
                     <h2 className="text-lg font-semibold">Project summary</h2>
                     <div className="flex space-x-2">
-                      <button className="flex items-center px-3 py-1 bg-white border border-gray-200 rounded text-sm">
-                        Project
-                        <ChevronDown size={16} className="ml-2" />
-                      </button>
-                      <button className="flex items-center px-3 py-1 bg-white border border-gray-200 rounded text-sm">
-                        Project manager
-                        <ChevronDown size={16} className="ml-2" />
-                      </button>
-                      <button className="flex items-center px-3 py-1 bg-white border border-gray-200 rounded text-sm">
-                        Status
-                        <ChevronDown size={16} className="ml-2" />
-                      </button>
+                      <input
+                        type="text"
+                        placeholder="Search projects..."
+                        className="px-3 py-1 border border-gray-200 rounded text-sm"
+                        value={projectFilter}
+                        onChange={e => setProjectFilter(e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -398,42 +420,49 @@ export default function CompanyDashboard() {
                       <tr>
                         <th className="text-left p-4 text-sm font-medium text-gray-500">Name</th>
                         <th className="text-left p-4 text-sm font-medium text-gray-500">Project manager</th>
-                        <th className="text-left p-4 text-sm font-medium text-gray-500">Due date</th>
                         <th className="text-left p-4 text-sm font-medium text-gray-500">Status</th>
+                        <th className="text-left p-4 text-sm font-medium text-gray-500">Progress</th>
                       </tr>
                     </thead>
                     <tbody>
                       {projectStats.loading ? (
-                        // Show loading skeleton for projects
                         Array(4).fill().map((_, index) => (
                           <tr key={index} className="border-t border-gray-100">
-                            <td className="p-4">
-                              <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-                            </td>
-                            <td className="p-4">
-                              <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
-                            </td>
-                            <td className="p-4">
-                              <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                            </td>
-                            <td className="p-4">
-                              <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-                            </td>
+                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div></td>
+                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div></td>
+                            <td className="p-4"><div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div></td>
+                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></td>
                           </tr>
                         ))
                       ) : (
-                        projects.map((project, index) => (
-                          <tr key={index} className="border-t border-gray-100">
-                            <td className="p-4 text-sm">{project.name}</td>
-                            <td className="p-4 text-sm">{project.manager}</td>
-                            <td className="p-4 text-sm">{project.dueDate}</td>
-                            <td className="p-4">
-                              <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(project.status)}`}>
-                                {project.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
+                        filteredProjects.map((project, index) => {
+                          // Try to get manager name from possible fields
+                          let managerName = '-';
+                          if (project.manager && typeof project.manager === 'string') {
+                            managerName = project.manager;
+                          } else if (project.managerId && project.managerId.fullName) {
+                            managerName = project.managerId.fullName;
+                          } else if (project.staff && Array.isArray(project.staff)) {
+                            // Try to find a staff member with role 'PROJECT MANAGER'
+                            const pm = project.staff.find(s => s.role && s.role.toLowerCase().includes('manager'));
+                            if (pm && pm.fullName) managerName = pm.fullName;
+                          }
+                          return (
+                            <tr key={project._id || index} className={`border-t border-gray-100 ${isOverdue(project) ? 'bg-red-50' : isAtRisk(project) ? 'bg-yellow-50' : ''}`}>
+                              <td className="p-4 text-sm">{getProjectName(project)}</td>
+                              <td className="p-4 text-sm">{managerName}</td>
+                              <td className="p-4">
+                                <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(project.status)}`}>{project.status}</span>
+                              </td>
+                              <td className="p-4">
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                  <div className={`h-2.5 rounded-full ${getProjectProgress(project) < 100 ? 'bg-blue-500' : 'bg-green-500'}`} style={{width: `${getProjectProgress(project)}%`}}></div>
+                                </div>
+                                <span className="text-xs text-gray-500 ml-2">{getProjectProgress(project)}%</span>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
@@ -446,11 +475,18 @@ export default function CompanyDashboard() {
                 </div>
                 <div className="p-4 border-b border-gray-100">
                   <div className="flex space-x-4">
+                    <input
+                      type="text"
+                      placeholder="Search tasks..."
+                      className="px-3 py-1 border border-gray-200 rounded text-sm"
+                      value={taskFilter}
+                      onChange={e => setTaskFilter(e.target.value)}
+                    />
                     <button 
                       className={`text-sm pb-2 ${activeTab === 'All' ? 'text-blue-600 border-b-2 border-blue-600 font-medium' : 'text-gray-500'}`}
                       onClick={() => setActiveTab('All')}
                     >
-                      All <span className="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">10</span>
+                      All <span className="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">{filteredTasks.length}</span>
                     </button>
                     <button 
                       className={`text-sm pb-2 ${activeTab === 'Important' ? 'text-blue-600 border-b-2 border-blue-600 font-medium' : 'text-gray-500'}`}
@@ -463,7 +499,6 @@ export default function CompanyDashboard() {
                 <div className="p-4">
                   <ul className="space-y-3">
                     {projectStats.loading ? (
-                      // Task loading animations
                       Array(4).fill().map((_, index) => (
                         <li key={index} className="flex items-center justify-between">
                           <div className="flex items-center">
@@ -474,21 +509,21 @@ export default function CompanyDashboard() {
                         </li>
                       ))
                     ) : (
-                      tasks.map((task, index) => (
-                        <li key={index} className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="bg-orange-500 rounded-full w-5 h-5 flex items-center justify-center mr-3">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
+                      filteredTasks
+                        .filter(task => activeTab === 'All' || (activeTab === 'Important' && task.priority === 'High'))
+                        .map((task, index) => (
+                          <li key={task._id || index} className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="bg-orange-500 rounded-full w-5 h-5 flex items-center justify-center mr-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                              <span className="text-sm">{task.name}</span>
                             </div>
-                            <span className="text-sm">{task.name}</span>
-                          </div>
-                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(task.status)}`}>
-                            {task.status}
-                          </span>
-                        </li>
-                      ))
+                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(task.status)}`}>{task.status}</span>
+                          </li>
+                        ))
                     )}
                   </ul>
                 </div>

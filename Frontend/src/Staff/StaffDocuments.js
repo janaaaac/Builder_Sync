@@ -171,6 +171,11 @@ const StaffDocuments = () => {
         formData.append('project', projectId);
       }
 
+      // Log FormData content for debugging
+      for (let [key, value] of formData.entries()) {
+        console.log(`FormData - ${key}:`, value);
+      }
+
       const response = await api.post('/api/documents', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -180,6 +185,8 @@ const StaffDocuments = () => {
           setUploadProgress(percentCompleted);
         }
       });
+
+      console.log('Upload Response:', response);
 
       if (response.data.success) {
         toast.success('Document uploaded successfully');
@@ -191,6 +198,7 @@ const StaffDocuments = () => {
       }
     } catch (err) {
       console.error('Error uploading document:', err);
+      console.error('Error Response:', err.response);
       toast.error(err.response?.data?.message || 'Error uploading document');
     } finally {
       setUploadProgress(0);
@@ -399,7 +407,7 @@ const StaffDocuments = () => {
             </h1>
             <button
               onClick={() => setShowUploadModal(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full flex items-center"
             >
               <FaUpload className="mr-2" /> Upload Document
             </button>
@@ -610,7 +618,7 @@ const StaffDocuments = () => {
                   <button
                     type="button"
                     onClick={addTag}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-md"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-r-full"
                   >
                     <FaTags />
                   </button>
@@ -730,13 +738,13 @@ const StaffDocuments = () => {
                     setShowUploadModal(false);
                     resetUploadForm();
                   }}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-100"
+                  className="px-4 py-2 border border-orange-500 text-orange-500 hover:bg-orange-50 rounded-full"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full flex items-center"
                   disabled={!selectedFile || !documentName}
                 >
                   <FaUpload className="mr-2" /> Upload
@@ -873,7 +881,7 @@ const StaffDocuments = () => {
                   {selectedDocument.accessControl?.allowedRoles?.filter(role => role !== 'company').length > 0 && (
                     <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.660.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                       </svg>
                       Shared with specific roles
                     </span>

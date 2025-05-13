@@ -39,7 +39,7 @@ const DocumentSharing = ({ document, onUpdatePermissions }) => {
       if (document && document.project) {
         projectId = typeof document.project === 'object' ? document.project._id : document.project;
       }
-      
+
       let response;
       if (projectId) {
         // If document is project-specific, get users from that project
@@ -50,20 +50,28 @@ const DocumentSharing = ({ document, onUpdatePermissions }) => {
           }
         });
       } else {
-        // Otherwise get all staff
-        response = await axios.get(`${API_URL}/api/staff`, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        // Only allow company users to fetch all staff
+        const userRole = localStorage.getItem('userRole');
+        if (userRole === 'company') {
+          response = await axios.get(`${API_URL}/api/staff`, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+        } else {
+          // For non-company users, do not fetch all staff, just use allowedUsers if present
+          setAvailableUsers(document?.accessControl?.allowedUsers || []);
+          setLoading(false);
+          return;
+        }
       }
-      
-      if (response.data.success) {
+      if (response && response.data.success) {
         setAvailableUsers(response.data.data || []);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
+      setAvailableUsers(document?.accessControl?.allowedUsers || []); // fallback
     } finally {
       setLoading(false);
     }
