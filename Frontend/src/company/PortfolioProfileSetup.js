@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -30,6 +30,91 @@ import {
   Award,
   Building2,
 } from 'lucide-react';
+
+// Moved component definitions outside of PortfolioProfileSetup
+
+const Input = ({ type = 'text', placeholder, value, onChange, className = '', ...props }) => (
+  <input
+    type={type}
+    value={value || ''}
+    onChange={e => onChange(e.target.value)}
+    placeholder={placeholder}
+    className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all ${className}`}
+    {...props}
+  />
+);
+
+const Textarea = ({ placeholder, value, onChange, className = '', ...props }) => (
+  <textarea
+    value={value || ''}
+    onChange={e => onChange(e.target.value)}
+    placeholder={placeholder}
+    className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all min-h-[100px] ${className}`}
+    {...props}
+  />
+);
+
+// Common button component
+const Button = ({ children, variant = 'primary', className = '', onClick, type = 'button' }) => {
+  const baseStyles = 'px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2';
+  const variants = {
+    primary: 'bg-orange-500 hover:bg-orange-600 text-white',
+    outline: 'border border-gray-300 text-gray-600 hover:bg-gray-50',
+    ghost: 'text-gray-400 hover:text-gray-600'
+  };
+
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      className={`${baseStyles} ${variants[variant]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+// Common select component
+const Select = ({ placeholder, options, value, onChange, className = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all cursor-pointer bg-white flex items-center justify-between ${className}`}
+      >
+        <span className={value ? 'text-gray-900' : 'text-gray-500'}>
+          {value || placeholder}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
+      </div>
+      {isOpen && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+          {options.map((option) => (
+            <div
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className="px-4 py-2 cursor-pointer hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+            >
+              {option.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Card component
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white rounded-xl shadow-lg p-6 ${className}`}>
+    {children}
+  </div>
+);
 
 const PortfolioProfileSetup = () => {
   const navigate = useNavigate();
@@ -608,90 +693,6 @@ const PortfolioProfileSetup = () => {
     }
   };
 
-  // FIXED: Input and Textarea without React.memo or useCallback, just plain functional components
-  const Input = ({ type = 'text', placeholder, value, onChange, className = '', ...props }) => (
-    <input
-      type={type}
-      value={value || ''}
-      onChange={e => onChange(e.target.value)}
-      placeholder={placeholder}
-      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all ${className}`}
-      {...props}
-    />
-  );
-
-  const Textarea = ({ placeholder, value, onChange, className = '', ...props }) => (
-    <textarea
-      value={value || ''}
-      onChange={e => onChange(e.target.value)}
-      placeholder={placeholder}
-      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all min-h-[100px] ${className}`}
-      {...props}
-    />
-  );
-
-  // Common button component
-  const Button = ({ children, variant = 'primary', className = '', onClick, type = 'button' }) => {
-    const baseStyles = 'px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2';
-    const variants = {
-      primary: 'bg-orange-500 hover:bg-orange-600 text-white',
-      outline: 'border border-gray-300 text-gray-600 hover:bg-gray-50',
-      ghost: 'text-gray-400 hover:text-gray-600'
-    };
-
-    return (
-      <button
-        type={type}
-        onClick={onClick}
-        className={`${baseStyles} ${variants[variant]} ${className}`}
-      >
-        {children}
-      </button>
-    );
-  };
-
-  // Common select component
-  const Select = ({ placeholder, options, value, onChange, className = '' }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-      <div className="relative">
-        <div
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all cursor-pointer bg-white flex items-center justify-between ${className}`}
-        >
-          <span className={value ? 'text-gray-900' : 'text-gray-500'}>
-            {value || placeholder}
-          </span>
-          <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
-        </div>
-        {isOpen && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
-            {options.map((option) => (
-              <div
-                key={option.value}
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
-                className="px-4 py-2 cursor-pointer hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-              >
-                {option.label}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Card component
-  const Card = ({ children, className = '' }) => (
-    <div className={`bg-white rounded-xl shadow-lg p-6 ${className}`}>
-      {children}
-    </div>
-  );
-
   // Wizard steps configuration
   const steps = [
     { id: 'hero', label: 'Hero Section', description: 'Set up your main landing section' },
@@ -795,6 +796,104 @@ const PortfolioProfileSetup = () => {
         description: value
       }
     }));
+  }, []);
+
+  // Callbacks for Why Choose Us section
+  const handleWhyChooseUsHeadingChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, whyChooseUs: { ...prev.whyChooseUs, heading: value } }));
+  }, []);
+  const handleWhyChooseUsSubheadingChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, whyChooseUs: { ...prev.whyChooseUs, subheading: value } }));
+  }, []);
+  const handleNewFeatureTitleChange = useCallback((value) => {
+    setNewFeature(prev => ({ ...prev, title: value }));
+  }, []);
+  const handleNewFeatureDescChange = useCallback((value) => {
+    setNewFeature(prev => ({ ...prev, desc: value }));
+  }, []);
+
+  // Callbacks for Project Details section
+  const handleProjectTitleChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, title: value }));
+  }, []);
+  const handleProjectDescriptionChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, description: value }));
+  }, []);
+  const handleProjectLocationChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, location: value }));
+  }, []);
+  const handleProjectCompletionYearChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, completionYear: value }));
+  }, []);
+  const handleProjectAreaChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, area: value }));
+  }, []);
+  const handleProjectDurationChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, duration: value }));
+  }, []);
+  const handleProjectBedroomsChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, bedrooms: value }));
+  }, []);
+  const handleProjectBathroomsChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, bathrooms: value }));
+  }, []);
+  const handleProjectPriceChange = useCallback((value) => {
+    setProjectDetails(prev => ({ ...prev, price: value }));
+  }, []);
+  const handleProjectDetailInputChange = useCallback((value) => {
+    setProjectDetails(prev => {
+      const newDetails = [...prev.details];
+      if (newDetails.length > 0) {
+        newDetails[newDetails.length - 1] = value;
+      } else {
+        newDetails.push(value); // Fallback, though details should be initialized with ['']
+      }
+      return { ...prev, details: newDetails };
+    });
+  }, []);
+
+  // Callbacks for New Team Member (in Project Details)
+  const handleNewTeamMemberFullNameChange = useCallback((value) => {
+    setNewTeamMember(prev => ({ ...prev, fullName: value }));
+  }, []);
+  const handleNewTeamMemberJobRoleChange = useCallback((value) => {
+    setNewTeamMember(prev => ({ ...prev, jobRole: value }));
+  }, []);
+
+  // Callbacks for Service Details section
+  const handleServiceTitleChange = useCallback((value) => {
+    setServiceDetails(prev => ({ ...prev, title: value }));
+  }, []);
+  const handleServiceDescriptionChange = useCallback((value) => {
+    setServiceDetails(prev => ({ ...prev, description: value }));
+  }, []);
+
+  // Callbacks for Stat Details section
+  const handleStatValueChange = useCallback((value) => {
+    setStatDetails(prev => ({ ...prev, value: value }));
+  }, []);
+
+  // Callbacks for Contact section
+  const handleContactPhoneChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, contact: { ...prev.contact, phone: value } }));
+  }, []);
+  const handleContactEmailChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, contact: { ...prev.contact, email: value } }));
+  }, []);
+  const handleContactAddressChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, contact: { ...prev.contact, address: value } }));
+  }, []);
+  const handleContactWorkingHoursChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, contact: { ...prev.contact, workingHours: value } }));
+  }, []);
+  const handleContactSocialFacebookChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, contact: { ...prev.contact, socialMedia: { ...prev.contact.socialMedia, facebook: value } } }));
+  }, []);
+  const handleContactSocialLinkedinChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, contact: { ...prev.contact, socialMedia: { ...prev.contact.socialMedia, linkedin: value } } }));
+  }, []);
+  const handleContactSocialInstagramChange = useCallback((value) => {
+    setPortfolio(prev => ({ ...prev, contact: { ...prev.contact, socialMedia: { ...prev.contact.socialMedia, instagram: value } } }));
   }, []);
 
   // Add state for new feature input
@@ -947,13 +1046,7 @@ const PortfolioProfileSetup = () => {
                     <Input 
                       placeholder="Enter section heading" 
                       value={portfolio.whyChooseUs.heading}
-                      onChange={(value) => setPortfolio(prev => ({
-                        ...prev,
-                        whyChooseUs: {
-                          ...prev.whyChooseUs,
-                          heading: value
-                        }
-                      }))}
+                      onChange={handleWhyChooseUsHeadingChange}
                     />
                   </div>
                   <div>
@@ -963,13 +1056,7 @@ const PortfolioProfileSetup = () => {
                     <Input 
                       placeholder="Enter section subheading"
                       value={portfolio.whyChooseUs.subheading}
-                      onChange={(value) => setPortfolio(prev => ({
-                        ...prev,
-                        whyChooseUs: {
-                          ...prev.whyChooseUs,
-                          subheading: value
-                        }
-                      }))}
+                      onChange={handleWhyChooseUsSubheadingChange}
                     />
                   </div>
                   
@@ -994,12 +1081,12 @@ const PortfolioProfileSetup = () => {
                         <Input 
                           placeholder="Title" 
                           value={newFeature.title}
-                          onChange={(value) => setNewFeature(prev => ({...prev, title: value}))}
+                          onChange={handleNewFeatureTitleChange}
                         />
                         <Input 
                           placeholder="Description" 
                           value={newFeature.desc}
-                          onChange={(value) => setNewFeature(prev => ({...prev, desc: value}))}
+                          onChange={handleNewFeatureDescChange}
                         />
                       </div>
                       <Button
@@ -1172,10 +1259,7 @@ const PortfolioProfileSetup = () => {
                   <Input 
                     placeholder="e.g., Modern Two-Story Luxury Residence" 
                     value={projectDetails.title}
-                    onChange={(value) => setProjectDetails({
-                      ...projectDetails,
-                      title: value
-                    })}
+                    onChange={handleProjectTitleChange}
                     required
                   />
                 </div>
@@ -1185,10 +1269,7 @@ const PortfolioProfileSetup = () => {
                   <Textarea 
                     placeholder="Describe the project..." 
                     value={projectDetails.description}
-                    onChange={(value) => setProjectDetails({
-                      ...projectDetails,
-                      description: value
-                    })}
+                    onChange={handleProjectDescriptionChange}
                     required
                   />
                 </div>
@@ -1201,10 +1282,7 @@ const PortfolioProfileSetup = () => {
                       <Input 
                         placeholder="City, Country" 
                         value={projectDetails.location}
-                        onChange={(value) => setProjectDetails({
-                          ...projectDetails,
-                          location: value
-                        })}
+                        onChange={handleProjectLocationChange}
                         className="pl-12"
                         required
                       />
@@ -1219,10 +1297,7 @@ const PortfolioProfileSetup = () => {
                         type="number"
                         placeholder="Completion Year" 
                         value={projectDetails.completionYear}
-                        onChange={(value) => setProjectDetails({
-                          ...projectDetails,
-                          completionYear: value
-                        })}
+                        onChange={handleProjectCompletionYearChange}
                         className="pl-12"
                         min="1900"
                         max="2100"
@@ -1245,10 +1320,7 @@ const PortfolioProfileSetup = () => {
                         type="number"
                         placeholder="2500" 
                         value={projectDetails.area}
-                        onChange={(value) => setProjectDetails({
-                          ...projectDetails,
-                          area: value
-                        })}
+                        onChange={handleProjectAreaChange}
                         className="pl-12"
                       />
                     </div>
@@ -1260,10 +1332,7 @@ const PortfolioProfileSetup = () => {
                       type="number"
                       placeholder="8" 
                       value={projectDetails.duration}
-                      onChange={(value) => setProjectDetails({
-                        ...projectDetails,
-                        duration: value
-                      })}
+                      onChange={handleProjectDurationChange}
                     />
                   </div>
 
@@ -1275,10 +1344,7 @@ const PortfolioProfileSetup = () => {
                         type="number"
                         placeholder="5" 
                         value={projectDetails.bedrooms}
-                        onChange={(value) => setProjectDetails({
-                          ...projectDetails,
-                          bedrooms: value
-                        })}
+                        onChange={handleProjectBedroomsChange}
                         className="pl-12"
                       />
                     </div>
@@ -1292,10 +1358,7 @@ const PortfolioProfileSetup = () => {
                         type="number"
                         placeholder="4.5" 
                         value={projectDetails.bathrooms}
-                        onChange={(value) => setProjectDetails({
-                          ...projectDetails,
-                          bathrooms: value
-                        })}
+                        onChange={handleProjectBathroomsChange}
                         className="pl-12"
                         step="0.5"
                       />
@@ -1311,10 +1374,7 @@ const PortfolioProfileSetup = () => {
                       type="number"
                       placeholder="125000000" 
                       value={projectDetails.price}
-                      onChange={(value) => setProjectDetails({
-                        ...projectDetails,
-                        price: value
-                      })}
+                      onChange={handleProjectPriceChange}
                       className="pl-12"
                     />
                   </div>
@@ -1329,18 +1389,8 @@ const PortfolioProfileSetup = () => {
                   <div className="flex gap-2">
                     <Input 
                       placeholder="Add a feature..." 
-                      value={projectDetails.details.length > 0 && projectDetails.details[projectDetails.details.length - 1] === '' 
-                        ? projectDetails.details[projectDetails.details.length - 1] 
-                        : ''}
-                      onChange={(value) => {
-                        const newDetails = [...projectDetails.details];
-                        if (newDetails.length > 0 && newDetails[newDetails.length - 1] === '') {
-                          newDetails[newDetails.length - 1] = value;
-                        } else {
-                          newDetails.push(value);
-                        }
-                        setProjectDetails({...projectDetails, details: newDetails});
-                      }}
+                      value={projectDetails.details.length > 0 ? projectDetails.details[projectDetails.details.length - 1] : ''}
+                      onChange={handleProjectDetailInputChange}
                       className="flex-1"
                     />
                     <Button
@@ -1392,7 +1442,7 @@ const PortfolioProfileSetup = () => {
                     <Input
                       placeholder="Full Name"
                       value={newTeamMember.fullName}
-                      onChange={value => setNewTeamMember(prev => ({ ...prev, fullName: value }))}
+                      onChange={handleNewTeamMemberFullNameChange}
                     />
                   </div>
                   <div>
@@ -1400,7 +1450,7 @@ const PortfolioProfileSetup = () => {
                     <Input
                       placeholder="Job Role"
                       value={newTeamMember.jobRole}
-                      onChange={value => setNewTeamMember(prev => ({ ...prev, jobRole: value }))}
+                      onChange={handleNewTeamMemberJobRoleChange}
                     />
                   </div>
                   <div>
@@ -1617,10 +1667,7 @@ const PortfolioProfileSetup = () => {
                   <Input 
                     placeholder="Enter service title"
                     value={serviceDetails.title}
-                    onChange={(value) => setServiceDetails({
-                      ...serviceDetails,
-                      title: value
-                    })}
+                    onChange={handleServiceTitleChange}
                   />
                 </div>
                 <div>
@@ -1630,10 +1677,7 @@ const PortfolioProfileSetup = () => {
                   <Textarea 
                     placeholder="Enter service description"
                     value={serviceDetails.description}
-                    onChange={(value) => setServiceDetails({
-                      ...serviceDetails,
-                      description: value
-                    })}
+                    onChange={handleServiceDescriptionChange}
                   />
                 </div>
                 <div>
@@ -1749,10 +1793,7 @@ const PortfolioProfileSetup = () => {
                   <Input 
                     placeholder="e.g., 25+, 1000+, 100%"
                     value={statDetails.value}
-                    onChange={(value) => setStatDetails({
-                      ...statDetails,
-                      value: value
-                    })}
+                    onChange={handleStatValueChange}
                   />
                 </div>
                 
@@ -1890,13 +1931,7 @@ const PortfolioProfileSetup = () => {
                     type="tel" 
                     placeholder="Enter phone number"
                     value={portfolio.contact.phone}
-                    onChange={(value) => setPortfolio({
-                      ...portfolio,
-                      contact: {
-                        ...portfolio.contact,
-                        phone: value
-                      }
-                    })}
+                    onChange={handleContactPhoneChange}
                   />
                 </div>
                 <div>
@@ -1907,13 +1942,7 @@ const PortfolioProfileSetup = () => {
                     type="email" 
                     placeholder="Enter email address"
                     value={portfolio.contact.email}
-                    onChange={(value) => setPortfolio({
-                      ...portfolio,
-                      contact: {
-                        ...portfolio.contact,
-                        email: value
-                      }
-                    })}
+                    onChange={handleContactEmailChange}
                   />
                 </div>
                 <div>
@@ -1923,13 +1952,7 @@ const PortfolioProfileSetup = () => {
                   <Textarea 
                     placeholder="Enter office address"
                     value={portfolio.contact.address}
-                    onChange={(value) => setPortfolio({
-                      ...portfolio,
-                      contact: {
-                        ...portfolio.contact,
-                        address: value
-                      }
-                    })}
+                    onChange={handleContactAddressChange}
                   />
                 </div>
               </div>
@@ -1942,13 +1965,7 @@ const PortfolioProfileSetup = () => {
                   <Input 
                     placeholder="e.g., Mon-Fri: 9:00 AM - 6:00 PM"
                     value={portfolio.contact.workingHours}
-                    onChange={(value) => setPortfolio({
-                      ...portfolio,
-                      contact: {
-                        ...portfolio.contact,
-                        workingHours: value
-                      }
-                    })}
+                    onChange={handleContactWorkingHoursChange}
                   />
                 </div>
                 <div>
@@ -1960,46 +1977,19 @@ const PortfolioProfileSetup = () => {
                       type="url" 
                       placeholder="Facebook URL"
                       value={portfolio.contact.socialMedia.facebook}
-                      onChange={(value) => setPortfolio({
-                        ...portfolio,
-                        contact: {
-                          ...portfolio.contact,
-                          socialMedia: {
-                            ...portfolio.contact.socialMedia,
-                            facebook: value
-                          }
-                        }
-                      })}
+                      onChange={handleContactSocialFacebookChange}
                     />
                     <Input 
                       type="url" 
                       placeholder="LinkedIn URL"
                       value={portfolio.contact.socialMedia.linkedin}
-                      onChange={(value) => setPortfolio({
-                        ...portfolio,
-                        contact: {
-                          ...portfolio.contact,
-                          socialMedia: {
-                            ...portfolio.contact.socialMedia,
-                            linkedin: value
-                          }
-                        }
-                      })}
+                      onChange={handleContactSocialLinkedinChange}
                     />
                     <Input 
                       type="url" 
                       placeholder="Instagram URL"
                       value={portfolio.contact.socialMedia.instagram}
-                      onChange={(value) => setPortfolio({
-                        ...portfolio,
-                        contact: {
-                          ...portfolio.contact,
-                          socialMedia: {
-                            ...portfolio.contact.socialMedia,
-                            instagram: value
-                          }
-                        }
-                      })}
+                      onChange={handleContactSocialInstagramChange}
                     />
                   </div>
                 </div>

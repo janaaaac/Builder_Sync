@@ -281,7 +281,7 @@ const ProjectProposalForm = () => {
   // Handle close success popup
   const handleCloseSuccessPopup = () => {
     setShowSuccessPopup(false);
-    navigate('/client-dashboard/proposals');
+    navigate('/client-dashboard');
   };
   
   return (

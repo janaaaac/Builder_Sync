@@ -9,6 +9,8 @@ const Company = require("../models/Company");
 const Client = require("../models/Client");
 const Staff = require("../models/Staff");
 const Proposal = require("../models/Proposal");
+// Create a new company with file upload handling
+router.post("/create", uploadCompanyFields, companyController.createCompany);
 
 // Apply auth middleware to all company routes
 router.use(requireAuth); // First verify token
@@ -16,8 +18,7 @@ router.use(requireRole('company')); // Then check role
 
 // Protected routes
 router.get("/profile", companyController.getCompanyProfile);
-// Create a new company with file upload handling
-router.post("/create", uploadCompanyFields, companyController.createCompany);
+
 
 // Get all companies
 router.get("/", companyController.getCompanies);

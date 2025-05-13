@@ -38,4 +38,7 @@ router.delete('/:projectId/plans/:planId', projectController.deletePlan);
 // Get project statistics for the dashboard
 router.get('/stats', requireAuth, projectController.getProjectStats);
 
+// Get a single project by ID (for company, client, or assigned staff)
+router.get('/:projectId', projectController.getProjectById);
+
 module.exports = router;

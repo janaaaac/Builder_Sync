@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
+import { Calendar, MapPin, DollarSign, Briefcase, Users, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import CompanySidebar from './CompanySideBar';
 
 const CompanyProjects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [staffList, setStaffList] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [selectedStaff, setSelectedStaff] = useState([]);
-  const [assigning, setAssigning] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -29,139 +29,198 @@ const CompanyProjects = () => {
     fetchProjects();
   }, []);
 
-  // Fetch staff list when assigning
-  const openAssignStaff = async (project) => {
-    setSelectedProject(project);
-    setSelectedStaff(project.staff ? project.staff.map(s => s._id) : []);
-    setSuccessMsg('');
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5001/api/staff', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setStaffList(res.data.data || []);
-    } catch {
-      setStaffList([]);
+  // Dedupe projects by id
+  const uniqueProjects = projects.filter((proj, index, self) =>
+    self.findIndex(p => p._id === proj._id) === index
+  );
+
+  // Filter projects based on status
+  const filteredProjects = filterStatus === 'all' 
+    ? uniqueProjects 
+    : uniqueProjects.filter(project => (project.status || '').toLowerCase() === filterStatus);
+
+  // Get status counts for the filter badges
+  const statusCounts = uniqueProjects.reduce((acc, project) => {
+    const status = (project.status || '').toLowerCase();
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Status badge colors
+  const getStatusColor = (status) => {
+    switch((status || '').toLowerCase()) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in progress': return 'bg-blue-100 text-blue-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleStaffChange = (staffId) => {
-    setSelectedStaff(prev =>
-      prev.includes(staffId)
-        ? prev.filter(id => id !== staffId)
-        : [...prev, staffId]
-    );
-  };
-
-  const assignStaff = async () => {
-    if (!selectedProject) return;
-    setAssigning(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5001/api/projects/${selectedProject._id}/add-staff`, {
-        staffIds: selectedStaff
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSuccessMsg('Staff assigned successfully!');
-      // Refresh projects
-      const res = await axios.get('http://localhost:5001/api/projects/company', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setProjects(res.data.data || []);
-      setSelectedProject(null);
-    } catch {
-      setSuccessMsg('Failed to assign staff.');
-    } finally {
-      setAssigning(false);
+  // Status icon
+  const getStatusIcon = (status) => {
+    switch((status || '').toLowerCase()) {
+      case 'completed': return <CheckCircle className="w-4 h-4 mr-1" />;
+      case 'in progress': return <Clock className="w-4 h-4 mr-1" />;
+      case 'pending': return <AlertCircle className="w-4 h-4 mr-1" />;
+      case 'cancelled': return <AlertCircle className="w-4 h-4 mr-1" />;
+      default: return <Clock className="w-4 h-4 mr-1" />;
     }
   };
 
-  if (loading) return <div>Loading projects...</div>;
-  if (error) return <div>{error}</div>;
+  const handleSidebarCollapse = (collapsed) => {
+    setSidebarCollapsed(collapsed);
+  };
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="max-w-4xl mx-auto p-6 text-center">
+      <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+      <h3 className="text-lg font-medium text-red-800">{error}</h3>
+      <p className="mt-2 text-gray-600">Please try refreshing the page or contact support if the issue persists.</p>
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Company Projects</h2>
-      {projects.length === 0 ? (
-        <div>No projects found.</div>
-      ) : (
-        <ul className="space-y-4">
-          {projects.map(project => (
-            <li key={project._id} className="border rounded p-4 bg-white shadow">
-              <h3 className="font-semibold text-lg">{project.title}</h3>
-              <div className="text-gray-600">{project.description}</div>
-              <div className="text-sm text-gray-500 mt-2">Status: {project.status}</div>
-              <div className="text-sm text-gray-500">Client: {project.client?.fullName}</div>
-              <div className="text-sm text-gray-500">Budget: {project.budget}</div>
-              <div className="text-sm text-gray-500">Location: {project.location}</div>
-              <div className="text-sm text-gray-500">Staff: {project.staff?.map(s => s.fullName).join(', ') || 'None'}</div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {project.staff?.length ? project.staff.map(s => (
-                  <div key={s._id} className="flex items-center gap-2 bg-gray-100 rounded px-2 py-1">
-                    <img
-                      src={s.profilePicture ? s.profilePicture : "/Assets/default-avatar.png"}
-                      alt={s.fullName}
-                      className="w-7 h-7 rounded-full object-cover border"
-                      onError={e => { e.target.onerror = null; e.target.src = "/Assets/default-avatar.png"; }}
-                    />
-                    <span className="text-xs font-medium">{s.fullName}</span>
-                    <span className="text-xs text-gray-500">({s.role})</span>
-                  </div>
-                )) : <span className="text-xs text-gray-400">No staff assigned</span>}
-              </div>
-              <button className="mt-2 px-4 py-1 bg-blue-500 text-white rounded" onClick={() => openAssignStaff(project)}>
-                Assign Staff
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <CompanySidebar onCollapseChange={handleSidebarCollapse} />
+      <div 
+        className="flex-1 transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >
+        <div className="mx-auto p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold text-gray-800">Company Projects</h2>
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => setFilterStatus('all')}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  filterStatus === 'all' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All ({uniqueProjects.length})
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Assign Staff Modal */}
-      {selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
-            <h3 className="text-lg font-bold mb-4">Assign Staff to {selectedProject.title}</h3>
-            <div className="mb-4 max-h-60 overflow-y-auto">
-              {staffList.length === 0 ? (
-                <div>No staff found.</div>
-              ) : (
-                staffList.map(staff => (
-                  <label key={staff._id} className="flex items-center gap-3 mb-2 p-2 rounded hover:bg-gray-50 cursor-pointer">
-                    <img
-                      src={staff.profilePicture ? staff.profilePicture : "/Assets/default-avatar.png"}
-                      alt={staff.fullName}
-                      className="w-10 h-10 rounded-full object-cover border"
-                      onError={e => { e.target.onerror = null; e.target.src = "/Assets/default-avatar.png"; }}
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium">{staff.fullName}</div>
-                      <div className="text-xs text-gray-500">{staff.role}</div>
-                      <div className="text-xs text-gray-400">{staff.email}</div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={selectedStaff.includes(staff._id)}
-                      onChange={() => handleStaffChange(staff._id)}
-                      className="ml-2"
-                    />
-                  </label>
-                ))
-              )}
+              {Object.keys(statusCounts).map(status => (
+                <button 
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filterStatus === status ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)} ({statusCounts[status]})
+                </button>
+              ))}
             </div>
-            <div className="flex gap-2 mt-4">
-              <button className="px-4 py-2 bg-gray-300 rounded" onClick={() => setSelectedProject(null)}>
-                Cancel
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={assignStaff} disabled={assigning}>
-                {assigning ? 'Assigning...' : 'Assign Staff'}
-              </button>
-            </div>
-            {successMsg && <div className="mt-2 text-green-600">{successMsg}</div>}
           </div>
+
+          {filteredProjects.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">No projects found</h3>
+              <p className="mt-2 text-gray-500">
+                {filterStatus === 'all' 
+                  ? "You don't have any projects yet." 
+                  : `You don't have any ${filterStatus} projects at the moment.`}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {filteredProjects.map(project => (
+                <div key={project._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+                  <div className="p-5">
+                    <div className="flex items-center gap-4 mb-4">
+                      {/* Company Logo */}
+                      <div className="shrink-0">
+                        <div className="w-16 h-16 rounded-lg border bg-gray-50 flex items-center justify-center overflow-hidden">
+                          {project.company?.logo ? (
+                            <img
+                              src={project.company.logo}
+                              alt={`${project.company?.name || 'Company'} logo`}
+                              className="w-full h-full object-contain"
+                              onError={e => { e.target.onerror = null; e.target.src = '/Assets/default-avatar.png'; }}
+                            />
+                          ) : (
+                            <Briefcase className="w-8 h-8 text-gray-400" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-xl font-bold text-gray-900 mb-1">
+                            <Link to={`/company-projects/${project._id}`} className="hover:text-orange-500 transition-colors">
+                              {project.title}
+                            </Link>
+                          </h3>
+                          <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                            {getStatusIcon(project.status)}
+                            <span>{project.status}</span>
+                          </div>
+                        </div>
+                        <p className="text-gray-600 line-clamp-2">{project.description}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Briefcase className="w-4 h-4 text-gray-400" />
+                        <span className="truncate">{project.company?.name || 'No company'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Users className="w-4 h-4 text-gray-400" />
+                        <span className="truncate">{project.client?.fullName || 'No client'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <DollarSign className="w-4 h-4 text-gray-400" />
+                        <span className="truncate">{project.budget || 'Budget not specified'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <MapPin className="w-4 h-4 text-gray-400" />
+                        <span className="truncate">{project.location || 'Location not specified'}</span>
+                      </div>
+                    </div>
+                    {/* Team Members */}
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 mb-2">Team Members:</div>
+                      {project.staff?.length ? (
+                        <div className="flex flex-wrap -mx-1">
+                          {project.staff.map((member, idx) => (
+                            <div key={`${member._id}-${idx}`} className="px-1 mb-2">
+                              <div className="flex items-center gap-2 bg-gray-50 rounded-full pl-1 pr-3 py-1">
+                                <img
+                                  src={member.profilePicture || '/Assets/default-avatar.png'}
+                                  alt={member.fullName}
+                                  className="w-6 h-6 rounded-full object-cover border"
+                                  onError={e => { e.target.onerror = null; e.target.src = '/Assets/default-avatar.png'; }}
+                                />
+                                <span className="text-xs font-medium text-gray-900">{member.fullName}</span>
+                                <span className="text-xs text-gray-500">{member.role}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-500 italic">No team members assigned yet</div>
+                      )}
+                    </div>
+                    <Link
+                      to={`/company-project-details/${project._id}`}
+                      className="block mt-4 text-center py-2 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded font-medium text-sm transition-colors"
+                    >
+                      View Project Details
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

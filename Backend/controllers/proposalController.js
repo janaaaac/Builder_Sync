@@ -203,6 +203,7 @@ exports.updateProposalStatus = async (req, res) => {
       const Notification = require('../models/Notification');
       await Notification.create({
         userId: proposal.client._id || proposal.client, // handle both populated and unpopulated
+        userType: 'Client', // FIXED: must be capital 'C' to match enum
         type: 'proposal_approved',
         message: `Your proposal "${proposal.projectTitle}" has been approved!`,
         proposal: proposal._id,

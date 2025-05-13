@@ -9,7 +9,7 @@ const StaffSchema = new mongoose.Schema({
   role: { 
     type: String, 
     required: true,
-    enum: ['project_manager', 'architect', 'engineer', 'quantity_surveyor', ]
+    enum: ['project_manager', 'architect', 'engineer', 'quantity_surveyor', 'qs', ]
   },
   profilePicture: { type: String },
   company: { 

@@ -22,7 +22,10 @@ import {
   Link
 } from 'lucide-react';
 
+import { useNavigate } from 'react-router-dom';
+
 const CompanyRegister = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
@@ -887,8 +890,7 @@ const CompanyRegister = () => {
               <button
                 onClick={() => {
                   setShowSuccessPopup(false);
-                  // You can add navigation to login page here
-                  // navigate('/login');
+                  navigate('/login');
                 }}
                 className="px-6 py-2.5 bg-[#EA540C] text-[#FFFFFF] rounded-lg hover:bg-[#EA540C]/90 transition-colors"
               >

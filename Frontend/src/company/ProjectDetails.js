@@ -1850,39 +1850,6 @@ const ProjectDetails = () => {
         </div>
       </div>
 
-      {/* Document Management Section */}
-      <div className="bg-gray-50 p-8 pb-16" id="documents">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Project Documents</h2>
-            <button 
-              onClick={() => navigate(`/company-documents/${projectId}`)}
-              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <FileText className="w-5 h-5" />
-              Manage Documents
-            </button>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-center py-8">
-              <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-xl font-medium text-gray-700 mb-2">Document Management Portal</h3>
-              <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                Access all project documents, manage approvals, and control document sharing from our dedicated document management system.
-              </p>
-              <button 
-                onClick={() => navigate(`/company-documents/${projectId}`)}
-                className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg inline-flex items-center gap-2"
-              >
-                <FileText className="w-5 h-5" />
-                Open Document Manager
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Simple Footer */}
       <div className="bg-gray-900 text-white p-6 text-center">
         <p>© 2025 BuilderSync. All rights reserved.</p>

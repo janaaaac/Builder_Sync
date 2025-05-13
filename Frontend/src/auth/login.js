@@ -140,19 +140,16 @@ const LoginPage = () => {
           return;
         }
         
-        // Check if user is a staff member (any staff role)
-        const staffRoles = ['project_manager', 'architect', 'engineer', 'quantity_surveyor', 'qs'];
-        const isStaffMember = staffRoles.includes(response.data.user.role);
+        // Check if user is a staff member by checking for company association or staffRole (logic from LoginTest.js)
+        const isStaffMember = response.data.user.company || response.data.token.includes("staffRole");
         
-        console.log("Checking staff role:", response.data.user.role, "Is staff member:", isStaffMember);
-
-        // Handle staff first login scenario
+        // STEP 2: Handle staff onboarding
+        // Check if staff member needs to complete first-time setup
         if (isStaffMember && response.data.user.isFirstLogin) {
           console.log("Staff first login detected - redirecting to /first-login");
           navigate('/first-login', { replace: true });
           return;
         }
-        
         // STEP 3: Route to appropriate dashboard
         const getDashboardPath = (user) => {
           if (user.role === "admin") return "/admin-dashboard";

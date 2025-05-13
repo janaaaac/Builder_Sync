@@ -551,3 +551,36 @@ exports.deletePlan = async (req, res) => {
     });
   }
 };
+
+// Get project by ID for company, client, or assigned staff
+exports.getProjectById = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.user._id;
+    const userRole = req.user.role;
+    
+    const project = await Project.findById(projectId)
+      .populate('client', 'fullName email')
+      .populate('company', 'name')
+      .populate('staff', 'fullName email role profilePicture');
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+    // Authorization: company, client, or assigned staff
+    let authorized = false;
+    if (userRole === 'company' && project.company && project.company._id.toString() === userId.toString()) {
+      authorized = true;
+    } else if (userRole === 'client' && project.client && project.client._id.toString() === userId.toString()) {
+      authorized = true;
+    } else if (userRole === 'staff' && project.staff && project.staff.some(s => s._id.toString() === userId.toString())) {
+      authorized = true;
+    }
+    if (!authorized) {
+      return res.status(403).json({ success: false, message: 'Not authorized to view this project' });
+    }
+    return res.json({ success: true, data: project });
+  } catch (err) {
+    console.error('Error in getProjectById:', err);
+    res.status(500).json({ success: false, message: 'Error fetching project', error: err.message });
+  }
+};

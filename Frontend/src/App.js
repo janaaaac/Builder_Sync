@@ -56,6 +56,8 @@ import StaffCalendar from './Staff/StaffCalendar';
 import StaffTaskDetail from './Staff/StaffTaskDetail';
 import StaffDocuments from './Staff/StaffDocuments';
 import CompanyDocuments from './company/CompanyDocuments';
+import BlueprintUploader from './Staff/QS';
+import CompanyProjectDetail from './company/CompanyProjectDetail';
 
 function App() {
   return (
@@ -106,6 +108,7 @@ function App() {
         <Route path="/company-projects" element={<CompanyProjects />} />
         <Route path="/company-calender" element={<CompanyCalendar />} />
         <Route path="/staff/notifications" element={<StaffNotifications />} />
+        <Route path="/company-project-details/:projectId" element={<CompanyProjectDetail />} />
     
 
         {/* Portfolio routes */}
@@ -128,6 +131,8 @@ function App() {
         {/* Company document routes */}
         <Route path="/company-documents" element={<CompanyDocuments />} />
         <Route path="/company-documents/:projectId" element={<CompanyDocuments />} />
+
+        <Route path="/qs" element={<BlueprintUploader />} />
 
         {/* Add a catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />
