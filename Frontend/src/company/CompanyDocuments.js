@@ -41,9 +41,12 @@ const CompanyDocuments = () => {
   const [documentToApprove, setDocumentToApprove] = useState(null);
   const [approvalComment, setApprovalComment] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [projects, setProjects] = useState([]); // Store the list of projects
+  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
 
   useEffect(() => {
     fetchDocuments();
+    fetchProjects(); // Fetch all company projects
     if (projectId) {
       fetchProjectStaff();
     }
@@ -71,6 +74,9 @@ const CompanyDocuments = () => {
         params.category = filterCategory;
       }
       
+      // Add query parameter to populate project data
+      params.populate = 'project';
+      
       const response = await axios.get(url, { 
         params,
         headers: { 
@@ -79,6 +85,7 @@ const CompanyDocuments = () => {
         }
       });
       if (response.data.success) {
+        console.log('Fetched documents with project info:', response.data.data);
         setDocuments(response.data.data.documents || response.data.data);
       } else {
         setError(response.data.message);
@@ -111,6 +118,34 @@ const CompanyDocuments = () => {
       }
     } catch (err) {
       console.error('Error fetching project staff:', err);
+    }
+  };
+
+  // Fetch all company projects
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error('Authentication token not found. Please log in again.');
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await axios.get(`${API_URL}/api/projects/company`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.success) {
+        console.log('Fetched company projects:', response.data.data);
+        setProjects(response.data.data);
+      } else {
+        console.error('Error fetching projects:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
     }
   };
 
@@ -163,8 +198,15 @@ const CompanyDocuments = () => {
       
       formData.append('accessControl', JSON.stringify(accessControlData));
       
+      // Use either the URL parameter projectId or the selected project from dropdown
       if (projectId) {
         formData.append('project', projectId);
+        console.log('Using URL projectId for document:', projectId);
+      } else if (selectedProjectId) {
+        formData.append('project', selectedProjectId);
+        console.log('Using selected projectId for document:', selectedProjectId);
+      } else {
+        console.log('No project selected for document');
       }
 
       const token = localStorage.getItem("token");
@@ -209,6 +251,7 @@ const CompanyDocuments = () => {
     setTagsArray([]);
     setCurrentTag('');
     setSelectedStaffIds([]);
+    setSelectedProjectId(''); // Reset selected project
     setAccessControl({
       isPublic: true,
       allowedRoles: ['project_manager', 'architect', 'engineer', 'quantity_surveyor']
@@ -472,6 +515,14 @@ const CompanyDocuments = () => {
                             )}
                           </div>
                         )}
+                        
+                        {/* Project info */}
+                        {doc.project && doc.project.title && (
+                          <div className="mt-1 text-xs text-gray-600 flex items-center gap-2">
+                            <span>Project:</span>
+                            <span className="font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{doc.project.title}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -604,6 +655,27 @@ const CompanyDocuments = () => {
                   <option value="timeline">Timeline</option>
                   <option value="other">Other</option>
                 </select>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Related Project
+                </label>
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="w-full border rounded-md p-2"
+                >
+                  <option value="">-- Select a project (optional) --</option>
+                  {projects.map((project) => (
+                    <option key={project._id} value={project._id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Associate this document with a specific project for better organization
+                </p>
               </div>
               
               <div className="mb-4">
@@ -822,6 +894,18 @@ const CompanyDocuments = () => {
                     {(selectedDocument.fileSize / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
+                
+                {/* Project info */}
+                {selectedDocument.project && selectedDocument.project.title && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-500">Project</h3>
+                    <p className="text-gray-800">
+                      <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                        {selectedDocument.project.title}
+                      </span>
+                    </p>
+                  </div>
+                )}
                 
                 {/* Document Status */}
                 <div>

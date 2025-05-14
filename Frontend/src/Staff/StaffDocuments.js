@@ -63,6 +63,8 @@ const StaffDocuments = () => {
     allowedRoles: ['project_manager', 'architect', 'engineer', 'quantity_surveyor', 'company']
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [projects, setProjects] = useState([]); // Store the list of projects
+  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
 
   useEffect(() => {
     // Verify authentication on component mount
@@ -79,6 +81,8 @@ const StaffDocuments = () => {
         });
         // If verification successful, fetch documents
         fetchDocuments();
+        // Fetch available projects
+        fetchProjects();
       } catch (error) {
         console.error('Authentication verification failed:', error);
         toast.error('Authentication failed. Please log in again.');
@@ -89,6 +93,21 @@ const StaffDocuments = () => {
 
     verifyAuth();
   }, [projectId, filterCategory, navigate]);
+
+  // Fetch all projects the staff member has access to
+  const fetchProjects = async () => {
+    try {
+      const response = await api.get('/api/projects/staff');
+      if (response.data.success) {
+        console.log('Fetched staff projects:', response.data.data);
+        setProjects(response.data.data);
+      } else {
+        console.error('Error fetching projects:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    }
+  };
 
   const fetchDocuments = async () => {
     setLoading(true);
@@ -104,8 +123,12 @@ const StaffDocuments = () => {
         params.category = filterCategory;
       }
       
+      // Add query parameter to populate project data
+      params.populate = 'project';
+      
       const response = await api.get(url, { params });
       if (response.data.success) {
+        console.log('Fetched documents with project info:', response.data.data);
         setDocuments(response.data.data.documents || response.data.data);
       } else {
         setError(response.data.message);
@@ -167,8 +190,15 @@ const StaffDocuments = () => {
       
       formData.append('accessControl', JSON.stringify(accessControl));
       
+      // Use either the URL parameter projectId or the selected project from dropdown
       if (projectId) {
         formData.append('project', projectId);
+        console.log('Using URL projectId for document:', projectId);
+      } else if (selectedProjectId) {
+        formData.append('project', selectedProjectId);
+        console.log('Using selected projectId for document:', selectedProjectId);
+      } else {
+        console.log('No project selected for document');
       }
 
       // Log FormData content for debugging
@@ -212,6 +242,7 @@ const StaffDocuments = () => {
     setDocumentType('other');
     setTagsArray([]);
     setCurrentTag('');
+    setSelectedProjectId(''); // Reset selected project
     setAccessControl({
       isPublic: true,
       allowedRoles: ['project_manager', 'architect', 'engineer', 'quantity_surveyor', 'company']
@@ -468,6 +499,14 @@ const StaffDocuments = () => {
                         <p className="text-sm text-gray-500 truncate">
                           {new Date(doc.createdAt).toLocaleDateString()} • {(doc.fileSize / 1024 / 1024).toFixed(2)} MB
                         </p>
+                        
+                        {/* Project info */}
+                        {doc.project && doc.project.title && (
+                          <div className="mt-1 text-xs text-gray-600 flex items-center gap-2">
+                            <span>Project:</span>
+                            <span className="font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{doc.project.title}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -604,42 +643,23 @@ const StaffDocuments = () => {
               
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Tags
+                  Related Project
                 </label>
-                <div className="flex items-center mb-2">
-                  <input
-                    type="text"
-                    value={currentTag}
-                    onChange={(e) => setCurrentTag(e.target.value)}
-                    className="flex-1 border rounded-l-md p-2"
-                    placeholder="Add tags"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  />
-                  <button
-                    type="button"
-                    onClick={addTag}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-r-full"
-                  >
-                    <FaTags />
-                  </button>
-                </div>
-                
-                {tagsArray.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {tagsArray.map((tag, index) => (
-                      <div key={index} className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full flex items-center text-sm">
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(index)}
-                          className="ml-1 text-gray-500 hover:text-red-500"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="w-full border rounded-md p-2"
+                >
+                  <option value="">-- Select a project (optional) --</option>
+                  {projects.map((project) => (
+                    <option key={project._id} value={project._id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Associate this document with a specific project for better organization
+                </p>
               </div>
               
               <div className="mb-4">

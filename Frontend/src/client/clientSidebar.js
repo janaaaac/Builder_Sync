@@ -5,9 +5,12 @@ import {
   Note,
   DocumentText,
   Setting2,
+  Message,
+  MessageNotif,
 } from "iconsax-react";
 import axios from "axios";
 import DefaultAvatar from "../Assets/default-avatar.png"; 
+import { Building2Icon, Calendar } from "lucide-react";
 
 // API configuration
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5001";
@@ -188,18 +191,18 @@ const ClientSidebar = ({ onCollapseChange }) => {
     setActiveItem(item);
     switch(item) {
       case "Dashboard":
-        navigate('/client-dashboard');
+        navigate('/client-d');
         break;
       case "Projects":
         navigate('/client-projects');
         break;
-      case "Documents":
+      case "Companies":
         navigate('/all-companies');
         break;
       case "Settings":
         navigate('/client-profile');
         break;
-      case "Chat":
+      case "Messages":
         navigate('/chat');
         break;
       case"Calendar":
@@ -334,10 +337,10 @@ const ClientSidebar = ({ onCollapseChange }) => {
           {[
             { name: "Dashboard", icon: Category },
             { name: "Projects", icon: Note },
-            { name: "Documents", icon: DocumentText },
+            { name: "Companies", icon: Building2Icon },
+            { name: "Messages", icon: MessageNotif },
+            { name: "Calendar", icon: Calendar },
             { name: "Settings", icon: Setting2 },
-            { name: "Chat", icon: DocumentText },
-            { name: "Calendar", icon: DocumentText },
           ].map((item) => (
             <li
               key={item.name}

@@ -16,7 +16,7 @@ const NotificationBell = ({ userType }) => {
   const notificationPageRoute = userType === 'client' 
     ? '/client/notifications' 
     : userType === 'staff' 
-      ? '/staff/notifications' 
+      ? '/staff-notifications' 
       : '/company/notifications';
 
   useEffect(() => {

@@ -117,7 +117,7 @@ const StaffSidebar = ({ onCollapseChange }) => {
       case "Settings":
         navigate('/staff-settings');
         break;
-      case "Chat":
+      case "Messages":
         navigate('/staff-chat');
         break;
       case "Tools": // Added Tools case
@@ -263,9 +263,9 @@ const StaffSidebar = ({ onCollapseChange }) => {
             { name: "Projects", icon: Note },
             { name: "Tasks", icon: Task },
             { name: "Calendar", icon: Calendar },
-            { name: "Chat", icon: MessageNotif },
+            { name: "Messages", icon: MessageNotif },
             { name: "Documents", icon: DocumentText },
-            { name: "Team", icon: Profile2User },
+  
             // Conditionally add Tools menu item
             ...(staffData.role === 'quantity_surveyor' || staffData.role === 'qs' ? [{ name: "Tools", icon: Briefcase }] : []),
             { name: "Settings", icon: Setting2 },

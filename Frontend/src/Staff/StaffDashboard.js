@@ -21,6 +21,7 @@ import {
   ArchiveBook,
   Profile2User
 } from "iconsax-react";
+import NotificationBell from "../components/NotificationBell";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5001";
 
@@ -51,6 +52,7 @@ const StaffDashboard = () => {
   const [projectsSortOrder, setProjectsSortOrder] = useState('dueDate');
   const [selectedProject, setSelectedProject] = useState(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -73,6 +75,19 @@ const StaffDashboard = () => {
         } else {
           console.error("Failed to fetch dashboard data:", response.data.message);
         }
+        
+        // Fetch unread notification count
+        try {
+          const notifResponse = await axios.get(`${API_URL}/api/notifications/unread-count`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (notifResponse.data.success) {
+            setUnreadNotifications(notifResponse.data.count);
+          }
+        } catch (notifError) {
+          console.error("Error fetching notification count:", notifError);
+        }
       } catch (error) {
         console.error("Dashboard Error:", error);
         
@@ -87,7 +102,55 @@ const StaffDashboard = () => {
     };
     
     fetchDashboardData();
+    
+    // Set up interval for refreshing notification count
+    const intervalId = setInterval(async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        
+        const notifResponse = await axios.get(`${API_URL}/api/notifications/unread-count`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (notifResponse.data.success) {
+          setUnreadNotifications(notifResponse.data.count);
+        }
+      } catch (error) {
+        console.error("Error refreshing notification count:", error);
+      }
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(intervalId);
   }, [navigate]);
+
+  useEffect(() => {
+    // Fetch unread notification count
+    const fetchNotificationCount = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        
+        if (!token) return;
+        
+        const response = await axios.get(`${API_URL}/api/notifications/unread-count`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.data.success) {
+          setUnreadNotifications(response.data.count);
+        }
+      } catch (error) {
+        console.error("Error fetching notification count:", error);
+      }
+    };
+    
+    fetchNotificationCount();
+    
+    // Refresh notification count every 30 seconds
+    const intervalId = setInterval(fetchNotificationCount, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleSidebarCollapse = (collapsed) => {
     setSidebarCollapsed(collapsed);
@@ -461,9 +524,20 @@ const StaffDashboard = () => {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
             <div className="flex space-x-4 items-center">
-              <button className="p-2 rounded-full hover:bg-gray-100">
+
+                      <NotificationBell userType="staff" />
+              {/* <button 
+                className="p-2 rounded-full hover:bg-gray-100 relative"
+                onClick={() => navigate('/staff-notifications')}
+                title="View Notifications"
+              >
                 <Notification variant="Outline" size={24} />
-              </button>
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                  </span>
+                )}
+              </button> */}
               <div className="flex items-center space-x-2">
                 <div className="w-10 h-10 rounded-full bg-[#FFEEE8] flex items-center justify-center overflow-hidden">
                   {isLoading ? (

@@ -21,7 +21,42 @@ const QsTools = () => {
     location: "",
     client: ""
   });
+  const [projects, setProjects] = useState([]); // Store the list of projects
+  const [selectedProjectId, setSelectedProjectId] = useState('');
   const fileInputRef = useRef(null);
+
+  // Fetch available projects when component mounts
+  React.useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  // Fetch all projects the staff member has access to
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('Authentication token not found');
+        return;
+      }
+
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await axios.get(`${API_URL}/api/projects/staff`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.success) {
+        setProjects(response.data.data);
+        console.log('Fetched projects:', response.data.data);
+      } else {
+        console.error('Error fetching projects:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    }
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -46,6 +81,7 @@ const QsTools = () => {
     setPreviewUrl(null);
     setResult("");
     setError("");
+    setSelectedProjectId(""); // Reset selected project
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -61,10 +97,28 @@ const QsTools = () => {
     setError("");
     const formData = new FormData();
     formData.append("file", file);
+    
+    // Add project ID if selected
+    if (selectedProjectId) {
+      formData.append("project_id", selectedProjectId);
+      console.log("Adding project ID to analysis:", selectedProjectId);
+    }
 
     try {
       const response = await axios.post("http://localhost:8000/analyze-drawing/", formData);
       setResult(response.data.result);
+      
+      // If project was selected, update projectInfo from the selected project
+      if (selectedProjectId) {
+        const selectedProject = projects.find(p => p._id === selectedProjectId);
+        if (selectedProject) {
+          setProjectInfo({
+            projectName: selectedProject.name || "",
+            location: selectedProject.location || "",
+            client: selectedProject.client?.name || ""
+          });
+        }
+      }
     } catch (error) {
       console.error("Upload failed:", error);
       setError("Failed to analyze the drawing. Please try again.");
@@ -571,6 +625,28 @@ const QsTools = () => {
                         </div>
                       )}
                     </div>
+                  </div>
+                  
+                  {/* Project Selection Dropdown */}
+                  <div className="mb-5">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Related Project (Optional)
+                    </label>
+                    <select
+                      value={selectedProjectId}
+                      onChange={(e) => setSelectedProjectId(e.target.value)}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:bg-blue-50 focus:bg-white"
+                    >
+                      <option value="">-- Select a project --</option>
+                      {projects.map((project) => (
+                        <option key={project._id} value={project._id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Associate this analysis with a specific project for better organization
+                    </p>
                   </div>
                   
                   {/* Error message with improved styling */}

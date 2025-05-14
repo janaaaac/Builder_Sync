@@ -59,6 +59,7 @@ import CompanyDocuments from './company/CompanyDocuments';
 // import BlueprintUploader from './Staff/QS'; // Removed this problematic import
 import CompanyProjectDetail from './company/CompanyProjectDetail';
 import QsTools from './Staff/QsTools';
+import Dashboard from './client/Dashboard';
 
 function App() {
   return (
@@ -84,6 +85,7 @@ function App() {
 
         {/* Client routes */}
         <Route path="/client-dashboard" element={<ClientSidebar />} />
+        <Route path="/client-d" element={<Dashboard />} />
         <Route path="/client-profile" element={<ClientSettings />} />
         <Route path="/all-companies" element={<AllCompanies />} /> {/* Added AllCompanies route */}
         <Route path="/client/construction-portfolio/:companyId" element={ <ClientConstructionPortfolioProfile />} />
@@ -108,7 +110,6 @@ function App() {
         <Route path="/staff-chat" element={<StaffChat />} />
         <Route path="/company-projects" element={<CompanyProjects />} />
         <Route path="/company-calender" element={<CompanyCalendar />} />
-        <Route path="/staff/notifications" element={<StaffNotifications />} />
         <Route path="/company-project-details/:projectId" element={<CompanyProjectDetail />} />
     
 
@@ -125,7 +126,7 @@ function App() {
   
         <Route path="/staff-tasks/:id" element={<StaffTaskDetail />} />
         <Route path="/staff-calendar" element={<StaffCalendar />} />
-        <Route path="/staff-notification" element={<StaffNotifications />} />
+        <Route path="/staff-notifications" element={<StaffNotifications />} />
         <Route path="/staff-documents" element={<StaffDocuments />} />
         <Route path="/staff-documents/:projectId" element={<StaffDocuments />} />
         

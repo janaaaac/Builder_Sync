@@ -153,7 +153,7 @@ const CompanySidebar = ({ onCollapseChange }) => {
       navigate('/company-documents');
       return;
     }
-    if (item === "chat") {
+    if (item === "Messages") {
       // Navigate to the company chat page
       navigate('/company-chat');
       return;
@@ -295,9 +295,8 @@ const CompanySidebar = ({ onCollapseChange }) => {
             { name: "Proposals", icon: DocumentText },
             { name: "Calendar", icon: Calendar },
             { name: "Team", icon: Profile2User },
-            { name: "chat", icon: MessageNotif },
+            { name: "Messages", icon: MessageNotif },
             { name: "Documents", icon: Folder },
-            { name: "Reports", icon: StatusUp },
             { name: "Settings", icon: Setting2 },
           ].map((item) => (
             <li
