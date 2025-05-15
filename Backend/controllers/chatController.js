@@ -390,3 +390,69 @@ exports.getStaffCompanyContacts = async (req, res) => {
     });
   }
 };
+
+// Helper: Check if sender can chat with recipient
+async function canChat(sender, senderType, recipient, recipientType) {
+  const Proposal = require("../models/Proposal");
+  const Staff = require("../models/Staff");
+  const Client = require("../models/Client");
+  const Company = require("../models/Company");
+
+  // Company <-> Client: Only if proposal exists
+  if (
+    (senderType === "company" && recipientType === "client") ||
+    (senderType === "client" && recipientType === "company")
+  ) {
+    const companyId = senderType === "company" ? sender : recipient;
+    const clientId = senderType === "client" ? sender : recipient;
+    const proposal = await Proposal.findOne({ company: companyId, client: clientId });
+    return !!proposal;
+  }
+  // Company <-> Staff: Only if staff belongs to company
+  if (
+    (senderType === "company" && recipientType === "staff") ||
+    (senderType === "staff" && recipientType === "company")
+  ) {
+    const companyId = senderType === "company" ? sender : recipient;
+    const staffId = senderType === "staff" ? sender : recipient;
+    const staff = await Staff.findById(staffId);
+    return staff && staff.company && staff.company.toString() === companyId.toString();
+  }
+  // Client <-> Staff: Only if staff assigned to client's project/proposal
+  if (
+    (senderType === "client" && recipientType === "staff") ||
+    (senderType === "staff" && recipientType === "client")
+  ) {
+    const clientId = senderType === "client" ? sender : recipient;
+    const staffId = senderType === "staff" ? sender : recipient;
+    // Check if staff is assigned to any proposal/project for this client
+    const proposal = await Proposal.findOne({ client: clientId, assignedStaff: staffId });
+    return !!proposal;
+  }
+  // Default: not allowed
+  return false;
+}
+
+// POST /api/chat/send-message
+exports.sendMessage = async (req, res) => {
+  try {
+    const { recipientId, recipientType, message } = req.body;
+    const senderId = req.user._id;
+    const senderType = req.user.role; // 'client', 'company', or 'staff'
+
+    // Permission check
+    const allowed = await canChat(senderId, senderType, recipientId, recipientType);
+    if (!allowed) {
+      return res.status(403).json({ message: "You are not allowed to chat with this user." });
+    }
+
+    // Save message logic here (pseudo, adapt to your Chat model)
+    // Example: create or update chat room, then push message
+    // ...
+    // const chat = await Chat.findOneAndUpdate(...)
+    // For now, just return success
+    res.status(200).json({ success: true, message: "Message sent (permission granted)" });
+  } catch (error) {
+    res.status(500).json({ message: "Error sending message", error: error.message });
+  }
+};

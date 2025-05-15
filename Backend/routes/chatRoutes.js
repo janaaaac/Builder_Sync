@@ -65,4 +65,11 @@ router.get(
   chatController.getMyCompanyStaff
 );
 
+// Send a chat message (with permission enforcement)
+router.post(
+  "/send-message",
+  requireAuth,
+  chatController.sendMessage
+);
+
 module.exports = router;

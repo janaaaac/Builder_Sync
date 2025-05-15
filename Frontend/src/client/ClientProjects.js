@@ -164,7 +164,7 @@ const ClientProjects = () => {
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
                           <h3 className="text-xl font-bold text-gray-900 mb-1">
-                            <Link to={`/client-project-details/${project._id}`} className="hover:text-orange-500 transition-colors">
+                            <Link to={`/clients-project-details?projectId=${project._id}`} className="hover:text-orange-500 transition-colors">
                               {project.title}
                             </Link>
                           </h3>
@@ -229,7 +229,7 @@ const ClientProjects = () => {
                       )}
                     </div>
                     <Link
-                      to={`/client-project-details/${project._id}`}
+                      to={`/clients-project-details?projectId=${project._id}`}
                       className="block mt-4 text-center py-2 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded font-medium text-sm transition-colors"
                     >
                       View Project Details

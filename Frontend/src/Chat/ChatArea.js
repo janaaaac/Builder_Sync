@@ -110,14 +110,39 @@ const ChatArea = ({ room, contact, userType, userId }) => {
     if (selectedFile) {
       await handleFileSend();
     } else if (message.trim()) {
-      const data = { 
-        room, 
-        message, 
-        sender: userId,
-        timestamp: new Date(),
-      };
-      socket.emit("sendMessage", data);
-      setMessage("");
+      try {
+        const token = localStorage.getItem("token");
+        // Send message via backend API for permission enforcement
+        await axios.post(
+          `${API_URL}/api/chat/send-message`,
+          {
+            recipientId: contact?._id || contact?.id,
+            recipientType: contact?.type,
+            message,
+          },
+          {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        // If successful, emit to socket for real-time update
+        const data = {
+          room,
+          message,
+          sender: userId,
+          timestamp: new Date(),
+        };
+        socket.emit("sendMessage", data);
+        setMessage("");
+      } catch (err) {
+        if (err.response && err.response.status === 403) {
+          alert("You are not allowed to chat with this user.");
+        } else {
+          alert("Failed to send message. Please try again.");
+        }
+      }
     }
   };
 

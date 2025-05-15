@@ -61,6 +61,7 @@ import CompanyProjectDetail from './company/CompanyProjectDetail';
 import QsTools from './Staff/QsTools';
 import Dashboard from './client/Dashboard';
 
+
 function App() {
   return (
     <BrowserRouter>
@@ -95,6 +96,7 @@ function App() {
         <Route path="/client-projects" element={<ClientProjects />} />
         <Route path="/client-calendar" element={<ClientCalendar />} />
         <Route path="/client/notifications" element={<ClientNotifications />} />
+
 
         {/* Company routes */}
         <Route path="/company-dashboard" element={<CompanySidebar />} />

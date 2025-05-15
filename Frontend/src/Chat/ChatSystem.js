@@ -41,7 +41,7 @@ const ChatSystem = ({ currentUser, userRole, contacts: propContacts, sidebar, se
         } else if (userInfo.role === "company") {
           console.log("User is a company");
           setUserType("company");
-          fetchCompanyContacts(id);
+          fetchCompanyContacts(id); // Fetch staff and clients for company chat list
         } else if (userInfo.role === "staff" || [
           "project_manager",
           "architect",
@@ -247,10 +247,38 @@ const ChatSystem = ({ currentUser, userRole, contacts: propContacts, sidebar, se
 
   // Helper function to format contact data
   const formatContact = (contact) => {
+    if (userType === "company") {
+      // Do not show the company itself in the chat list
+      if (contact.type === "company" && (contact._id === userId || contact.id === userId)) {
+        return null;
+      }
+      // Always show staff provided by backend, unless their id matches the company id (should never happen)
+      if (contact.type === "staff") {
+        if (contact._id === userId || contact.id === userId) {
+          return null;
+        }
+        // No other checks needed; backend should only provide staff for this company
+      }
+      // Only include clients if they have sent a proposal (assume backend already filters this)
+      if (contact.type === "client" && !contact.hasProposal) {
+        return null;
+      }
+    }
     return {
       id: contact._id || contact.id,
       _id: contact._id || contact.id, // Keep both id and _id to ensure compatibility
-      name: contact.fullName || contact.companyName || contact.fullName || "Unknown",
+      // Robust name logic for all contact types
+      name:
+         contact.name ||
+        contact.fullName ||
+        contact.companyName ||
+        contact.contactPersonName ||
+        (contact.firstName && contact.lastName ? `${contact.firstName} ${contact.lastName}` : null) ||
+        contact.firstName ||
+        contact.lastName ||
+        contact.username ||
+        contact.email ||
+        "Unknown",
       avatar: contact.avatar || contact.profilePicture || contact.companyLogo || "/Assets/default-avatar.png",
       lastMessage: contact.lastMessage || "Start a conversation",
       time: contact.time ? new Date(contact.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
@@ -261,10 +289,36 @@ const ChatSystem = ({ currentUser, userRole, contacts: propContacts, sidebar, se
     };
   };
 
-  // Generate a unique chat room ID based on user types and IDs
   const generateChatRoom = (contactId, contactType) => {
-    return `${userType}_${userId}_${contactType || 'contact'}_${contactId}`;
-  };
+  if (!userType || !userId || !contactType || !contactId) return "invalid_room";
+  let pair = [
+    { role: userType, id: userId },
+    { role: contactType, id: contactId }
+  ];
+  pair.sort((a, b) => a.role.localeCompare(b.role) || String(a.id).localeCompare(String(b.id)));
+  return `chat_${pair[0].role}_${pair[0].id}_${pair[1].role}_${pair[1].id}`;
+};
+
+  // // Generate a unique chat room ID based on allowed chat logic
+  // const generateChatRoom = (contactId, contactType) => {
+  //   // Ensure userType and userId are set
+  //   if (!userType || !userId || !contactType || !contactId) return "invalid_room";
+  
+  //   // For company-client, company-staff, client-staff, always sort by role for deterministic room
+  //   // Example: chat_company_123_client_456, chat_client_456_company_123, etc.
+  //   const roles = [userType, contactType];
+  //   const ids = [userId, contactId];
+  
+  //   // Sort roles and ids together to ensure room is the same regardless of sender/receiver
+  //   let pair = [
+  //     { role: userType, id: userId },
+  //     { role: contactType, id: contactId }
+  //   ];
+  //   pair.sort((a, b) => a.role.localeCompare(b.role) || String(a.id).localeCompare(String(b.id)));
+  
+  //   // Room format: chat_{role1}_{id1}_{role2}_{id2}
+  //   return `chat_${pair[0].role}_${pair[0].id}_${pair[1].role}_${pair[1].id}`;
+  // };
 
   const handleContactSelect = (contact) => {
     setSelectedContact(contact);
@@ -320,7 +374,7 @@ const ChatSystem = ({ currentUser, userRole, contacts: propContacts, sidebar, se
               <div className="text-center w-full max-w-md mx-auto">
                 <div className="flex justify-center mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03 8 9 8s9 3.582 9 8z" />
                   </svg>
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-800 mb-2">Select a contact to start messaging</h3>
