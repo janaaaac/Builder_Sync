@@ -13,6 +13,9 @@ router.get('/', requireAuth, taskController.getTasks);
 // Get single task by ID
 router.get('/:id', requireAuth, taskController.getTaskById);
 
+// Get all tasks by project ID
+router.get('/project/:projectId', requireAuth, taskController.getTasksByProject);
+
 // Update task (project managers only)
 router.put('/:id', requireAuth, requireRole('project_manager'), taskController.updateTask);
 

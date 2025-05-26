@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   Phone,Mail,MapPin,Building2,Hammer,Users,Clock,
@@ -1531,7 +1531,7 @@ const ConstructionPortfolioProfile = () => {
                 {saveError}
               </div>
             )}
-            
+       
             {isEditing ? (
               <>
                 {renderEditForm()}
@@ -1565,6 +1565,8 @@ const ConstructionPortfolioProfile = () => {
               >
                 <Edit3 className="w-6 h-6" />
               </button>
+
+              
             )}
           </div>
         )}
@@ -1667,12 +1669,24 @@ const ConstructionPortfolioProfile = () => {
         {/* Projects Section - Modified to show limited cards with See More button */}
         <div className="py-20 bg-gray-900">
           <div className="container mx-auto px-6">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold text-white mb-4">Featured Projects</h2>
-              <p className="text-gray-400">
-                Discover our portfolio of landmark projects that showcase our expertise 
-                in construction and development.
-              </p>
+            <div className="relative max-w-4xl mx-auto mb-16">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-center mx-auto">
+                  <h2 className="text-3xl font-bold text-white mb-4">Featured Projects</h2>
+                  <p className="text-gray-400">
+                    Discover our portfolio of landmark projects that showcase our expertise 
+                    in construction and development.
+                  </p>
+                </div>
+                <div className="absolute right-0 top-0">
+                  <Link 
+                    to="/company/add-project" 
+                    className="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
+                  >
+                    <Plus className="w-4 h-4 mr-2" /> Add New Project
+                  </Link>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

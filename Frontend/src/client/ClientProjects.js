@@ -199,7 +199,7 @@ const ClientProjects = () => {
                       <div className="text-xs font-medium text-gray-500 mb-2">Team Members:</div>
                       {project.staff?.length ? (
                         <div className="flex flex-wrap -mx-1">
-                          {[...new Map(project.staff.map(member => [member._id || member.email || member.fullName, member])).values()].map((member, idx) => (
+                          {project.staff.map((member, idx) => (
                             <div key={`${member._id || member.email || member.fullName}-${idx}`} className="px-1 mb-2">
                               <div className="flex items-center gap-2 bg-gray-100 rounded-full pl-1 pr-3 py-1 border border-gray-200">
                                 <div className="w-6 h-6 rounded-full bg-gray-200 border border-gray-300 overflow-hidden flex items-center justify-center">
@@ -208,14 +208,15 @@ const ClientProjects = () => {
                                       src={member.profilePicture}
                                       alt={member.fullName}
                                       className="w-full h-full object-cover rounded-full"
-                                      onError={e => { e.target.onerror = null; e.target.src = '/Assets/default-avatar.png'; }}
+                                      onError={(e) => {
+                                        console.log('Profile image failed to load:', member.profilePicture);
+                                        e.target.src = `${process.env.PUBLIC_URL}/Assets/default-avatar.png`;
+                                      }}
                                     />
                                   ) : (
-                                    <img
-                                      src={'/Assets/default-avatar.png'}
-                                      alt="Default avatar"
-                                      className="w-full h-full object-cover rounded-full"
-                                    />
+                                    <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
+                                      {member.fullName ? member.fullName.charAt(0).toUpperCase() : '?'}
+                                    </div>
                                   )}
                                 </div>
                                 <span className="text-xs font-medium text-gray-900">{member.fullName}</span>

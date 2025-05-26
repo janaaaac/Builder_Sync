@@ -77,13 +77,13 @@ function Header() {
           isMenuOpen ? 'block' : 'hidden'
         }`}
       >
-        <a
+        {/* <a
           href="#home"
           className="block mt-4 md:mt-0 md:inline-block text-gray-800 hover:text-orange-600"
         >
           Home
-        </a>
-        <a
+        </a> */}
+        {/* <a
           href="#about"
           className="block mt-4 md:mt-0 md:inline-block text-gray-800 hover:text-orange-600"
         >
@@ -100,7 +100,7 @@ function Header() {
           className="block mt-4 md:mt-0 md:inline-block text-gray-800 hover:text-orange-600"
         >
           Project
-        </a>
+        </a> */}
       </nav>
 
       {/* Sign-Up Button */}

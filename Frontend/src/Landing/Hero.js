@@ -1,9 +1,16 @@
 import React from 'react';
 import { TypeAnimation } from 'react-type-animation';
+import { useNavigate } from 'react-router-dom';
 import hero_bg_ from '../Assets/hero_bg_.png';
 import shapeBg from '../Assets/sec-bg-shape2.png';
 
 function Hero() {
+  const navigate = useNavigate();
+
+  const handleSignUpClick = () => {
+    navigate('/register-category');
+  };
+
   return (
     <div className="relative pt-16">
       {/* Background shape */}
@@ -51,10 +58,11 @@ function Hero() {
             This version is concise while still emphasizing experience and quality craftsmanship.
           </p>
           <button
+            onClick={handleSignUpClick}
             className="mt-5 bg-[#EA540C] text-white px-6 py-2 rounded-md hover:bg-[#d64a0b] transition-colors duration-300 animate-fade-in-up"
             style={{ animationDelay: '0.9s' }}
           >
-            Services
+            Sign Up
           </button>
         </div>
       </section>

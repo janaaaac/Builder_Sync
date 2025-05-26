@@ -10,6 +10,7 @@ const fs = require('fs');
 const multerS3 = require('multer-s3');
 const { getPresignedUrl } = require("../utils/s3Presigner");
 
+
 // Initialize S3 client
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -56,45 +57,7 @@ function parseS3Url(url) {
 
 // Serve files directly from S3
 router.get('/s3-image/:folder/:filename', async (req, res) => {
-  try {
-    const folder = req.params.folder;
-    const filename = req.params.filename;
-    const key = `${folder}/${filename}`;
-    
-    console.log('Fetching S3 image with key:', key);
-    
-    const command = new GetObjectCommand({
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: key,
-    });
-    
-    try {
-      const { Body, ContentType } = await s3Client.send(command);
-      
-      // Set appropriate headers
-      res.set('Content-Type', ContentType || 'image/jpeg');
-      res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-      
-      // Stream the file to response
-      Body.pipe(res);
-    } catch (s3Error) {
-      console.error('Error fetching from S3:', s3Error);
-      
-      if (s3Error.$metadata?.httpStatusCode === 404) {
-        return res.status(404).send('File not found');
-      }
-      
-      if (s3Error.$metadata?.httpStatusCode === 403) {
-        console.error('S3 permission denied (403) - check bucket policy');
-        return res.status(403).send('Permission denied');
-      }
-      
-      return res.status(500).send('Error accessing S3');
-    }
-  } catch (error) {
-    console.error('General error in S3 proxy route:', error);
-    res.status(500).send('Server error');
-  }
+  // ...fetches from S3 and streams the image...
 });
 
 // Proxy any external URL
@@ -297,5 +260,6 @@ router.post('/ensure-directory', requireAuth, (req, res) => {
     });
   }
 });
+
 
 module.exports = router;

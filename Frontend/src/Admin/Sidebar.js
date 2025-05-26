@@ -141,12 +141,12 @@ const AdminSidebar = ({ onCollapseChange }) => {
       <div className="px-4">
         <ul className="space-y-1">
           {[
-             { name: "Dashboard", icon: Category },
+            //  { name: "Dashboard", icon: Category },
              { name: "Client Management", icon: People },
              { name: "Company Management", icon: Building2 },
-             { name: "Projects", icon: Note },
-             { name: "Analytics", icon: Chart },
-             { name: "Settings", icon: Setting2 },
+            //  { name: "Projects", icon: Note },
+            //  { name: "Analytics", icon: Chart },
+            //  { name: "Settings", icon: Setting2 },
           ].map((item) => (
             <li
               key={item.name}

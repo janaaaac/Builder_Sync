@@ -42,6 +42,19 @@ exports.getTasks = async (req, res) => {
   }
 };
 
+// Get all tasks for a specific project
+exports.getTasksByProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const tasks = await Task.find({ project: projectId })
+      .populate('assignedTo', 'fullName email role profilePicture')
+      .populate('createdBy', 'fullName email role');
+    res.json({ success: true, data: tasks });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error fetching project tasks', error: err.message });
+  }
+};
+
 // Get a single task by ID
 exports.getTaskById = async (req, res) => {
   try {

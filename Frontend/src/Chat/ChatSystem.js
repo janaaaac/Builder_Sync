@@ -264,6 +264,16 @@ const ChatSystem = ({ currentUser, userRole, contacts: propContacts, sidebar, se
         return null;
       }
     }
+    if (userType === "client") {
+      // Only show staff if assigned to a proposal/project for this client
+      if (contact.type === "staff" && !contact.assignedToClientProject) {
+        return null;
+      }
+      // Do not show the company itself as a chat contact when chatting with staff
+      if (contact.type === "company") {
+        return null;
+      }
+    }
     return {
       id: contact._id || contact.id,
       _id: contact._id || contact.id, // Keep both id and _id to ensure compatibility
@@ -285,40 +295,32 @@ const ChatSystem = ({ currentUser, userRole, contacts: propContacts, sidebar, se
       online: contact.online || false,
       read: contact.read || false,
       type: contact.type || (contact.clientType ? "client" : contact.companyName ? "company" : "staff"),
-      room: generateChatRoom(contact._id || contact.id, contact.type)
+      room: generateChatRoom(contact)
     };
   };
 
-  const generateChatRoom = (contactId, contactType) => {
-  if (!userType || !userId || !contactType || !contactId) return "invalid_room";
-  let pair = [
-    { role: userType, id: userId },
-    { role: contactType, id: contactId }
-  ];
-  pair.sort((a, b) => a.role.localeCompare(b.role) || String(a.id).localeCompare(String(b.id)));
-  return `chat_${pair[0].role}_${pair[0].id}_${pair[1].role}_${pair[1].id}`;
-};
-
-  // // Generate a unique chat room ID based on allowed chat logic
-  // const generateChatRoom = (contactId, contactType) => {
-  //   // Ensure userType and userId are set
-  //   if (!userType || !userId || !contactType || !contactId) return "invalid_room";
-  
-  //   // For company-client, company-staff, client-staff, always sort by role for deterministic room
-  //   // Example: chat_company_123_client_456, chat_client_456_company_123, etc.
-  //   const roles = [userType, contactType];
-  //   const ids = [userId, contactId];
-  
-  //   // Sort roles and ids together to ensure room is the same regardless of sender/receiver
-  //   let pair = [
-  //     { role: userType, id: userId },
-  //     { role: contactType, id: contactId }
-  //   ];
-  //   pair.sort((a, b) => a.role.localeCompare(b.role) || String(a.id).localeCompare(String(b.id)));
-  
-  //   // Room format: chat_{role1}_{id1}_{role2}_{id2}
-  //   return `chat_${pair[0].role}_${pair[0].id}_${pair[1].role}_${pair[1].id}`;
-  // };
+  // Updated generateChatRoom to use full contact object for unique client-staff rooms
+  const generateChatRoom = (contact) => {
+    if (!userType || !userId || !contact || !contact.type) return "invalid_room";
+    // For client-staff, always use explicit clientId and staffId if present
+    if (
+      (userType === "client" && contact.type === "staff") ||
+      (userType === "staff" && contact.type === "client")
+    ) {
+      const clientId = contact.clientId || (userType === "client" ? userId : contact._id || contact.id);
+      const staffId = contact.staffId || (userType === "staff" ? userId : contact._id || contact.id);
+      if (clientId && staffId) {
+        return `chat_client_${clientId}_staff_${staffId}`;
+      }
+    }
+    // Default: sort by role for deterministic room
+    let pair = [
+      { role: userType, id: userId },
+      { role: contact.type, id: contact._id || contact.id }
+    ];
+    pair.sort((a, b) => a.role.localeCompare(b.role) || String(a.id).localeCompare(String(b.id)));
+    return `chat_${pair[0].role}_${pair[0].id}_${pair[1].role}_${pair[1].id}`;
+  };
 
   const handleContactSelect = (contact) => {
     setSelectedContact(contact);

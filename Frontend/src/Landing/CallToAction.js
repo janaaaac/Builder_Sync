@@ -1,7 +1,10 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import globalLineShape from '../Assets/global-line-shape1.png';
 
 const CallToAction = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="relative">
       {/* Animated shape */}
@@ -24,7 +27,10 @@ const CallToAction = () => {
           </h2>
 
           {/* Button */}
-          <button className="flex items-center justify-center bg-[#EA540C] text-white font-bold py-4 px-8 rounded-full hover:bg-[#D94A0A] transition-colors duration-300">
+          <button 
+            onClick={() => navigate('/login')}
+            className="flex items-center justify-center bg-[#EA540C] text-white font-bold py-4 px-8 rounded-full hover:bg-[#D94A0A] transition-colors duration-300"
+          >
             Get Started <span className="ml-3 text-xl">→</span>
           </button>
         </div>

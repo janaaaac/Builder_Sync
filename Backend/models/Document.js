@@ -82,7 +82,7 @@ const DocumentSchema = new Schema({
   status: {
     type: String,
     enum: ['draft', 'pending_approval', 'approved', 'rejected', 'archived'],
-    default: 'draft'
+    default: 'approved'
   },
   approvedBy: {
     type: Schema.Types.ObjectId,

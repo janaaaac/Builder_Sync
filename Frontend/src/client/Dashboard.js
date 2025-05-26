@@ -474,7 +474,8 @@ const Dashboard = () => {
                     ) : dashboardData.upcomingMeetings.length === 0 ? (
                       <div className="p-8 text-center">
                         <Calendar className="h-10 w-10 mx-auto text-gray-300 mb-2" />
-                        <p className="text-gray-500">No upcoming meetings</p>
+                        <h3 className="text-gray-500 mb-1">No upcoming meetings</h3>
+                        <p className="text-sm text-gray-400">Upcoming meetings will appear here when scheduled</p>
                       </div>
                     ) : (
                       dashboardData.upcomingMeetings.map(meeting => (

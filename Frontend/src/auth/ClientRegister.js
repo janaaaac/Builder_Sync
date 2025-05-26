@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   HardHat, 
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react';
 
 const ClientRegister = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
@@ -636,7 +638,7 @@ const ClientRegister = () => {
                 onClick={() => {
                   setShowSuccessPopup(false);
                   // You can add navigation to login page here
-                  // navigate('/login');
+                  navigate('/login');
                 }}
                 className="px-6 py-2.5 bg-[#EA540C] text-[#FFFFFF] rounded-lg hover:bg-[#EA540C]/90 transition-colors"
               >

@@ -60,6 +60,8 @@ import CompanyDocuments from './company/CompanyDocuments';
 import CompanyProjectDetail from './company/CompanyProjectDetail';
 import QsTools from './Staff/QsTools';
 import Dashboard from './client/Dashboard';
+import ClientsProjectDetails from './client/ClientsProjectDetails';
+import AddNewProject from './company/AddNewProject';
 
 
 function App() {
@@ -96,6 +98,7 @@ function App() {
         <Route path="/client-projects" element={<ClientProjects />} />
         <Route path="/client-calendar" element={<ClientCalendar />} />
         <Route path="/client/notifications" element={<ClientNotifications />} />
+        <Route path="/clients-project-details" element={<ClientsProjectDetails />} />
 
 
         {/* Company routes */}
@@ -113,6 +116,7 @@ function App() {
         <Route path="/company-projects" element={<CompanyProjects />} />
         <Route path="/company-calender" element={<CompanyCalendar />} />
         <Route path="/company-project-details/:projectId" element={<CompanyProjectDetail />} />
+        <Route path="/company/add-project" element={<AddNewProject />} />
     
 
         {/* Portfolio routes */}

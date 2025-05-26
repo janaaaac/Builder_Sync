@@ -5,6 +5,7 @@ import { saveAs } from 'file-saver';
 import StaffSidebar from "./staffSideBar";
 
 const QsTools = () => {
+  // Core states
   const [file, setFile] = useState(null);
   const [result, setResult] = useState("");
   const [boqResult, setBoqResult] = useState("");
@@ -14,8 +15,14 @@ const QsTools = () => {
   const [error, setError] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const [exporting, setExporting] = useState(false);
+  
+  // UI states
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("takeoff");
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [showProjectSelect, setShowProjectSelect] = useState(false);
+  
+  // Project info state
   const [projectInfo, setProjectInfo] = useState({
     projectName: "",
     location: "",
@@ -136,14 +143,16 @@ const QsTools = () => {
     const lines = textData.split('\n').filter(line => line.trim());
     
     // Identify if there's a header row
-    const headerIndex = lines.findIndex(line => 
-      line.toLowerCase().includes("item") || 
-      line.toLowerCase().includes("description") ||
-      line.toLowerCase().includes("unit") ||
-      line.toLowerCase().includes("quantity") ||
-      line.toLowerCase().includes("rate") ||
-      line.toLowerCase().includes("amount")
-    );
+    const headerIndex = lines.findIndex(line => {
+      if (!line || typeof line !== 'string') return false;
+      const lowerLine = line.toLowerCase();
+      return lowerLine.includes("item") || 
+        lowerLine.includes("description") ||
+        lowerLine.includes("unit") ||
+        lowerLine.includes("quantity") ||
+        lowerLine.includes("rate") ||
+        lowerLine.includes("amount");
+    });
     
     const startIndex = headerIndex !== -1 ? headerIndex : 0;
     
@@ -152,12 +161,14 @@ const QsTools = () => {
       // Check if table uses pipe separators
       if (line.includes('|')) {
         return line.split('|')
-          .map(cell => cell.trim())
+          .map(cell => cell && typeof cell === 'string' ? cell.trim().replace(/[*#]/g, '').trim() : '') // Remove symbols like *, #
           .filter(cell => cell);
       }
       
       // Otherwise use whitespace with sensible grouping
-      return line.split(/\s{2,}/).map(cell => cell.trim()).filter(cell => cell);
+      return line.split(/\s{2,}/)
+          .map(cell => cell && typeof cell === 'string' ? cell.trim().replace(/[*#]/g, '').trim() : '') // Remove symbols like *, #
+          .filter(cell => cell);
     });
     
     return rows;
@@ -174,14 +185,16 @@ const QsTools = () => {
     const lines = textData.split('\n').filter(line => line.trim());
     
     // Identify if there's a header row
-    const headerIndex = lines.findIndex(line => 
-      line.toLowerCase().includes("item") || 
-      line.toLowerCase().includes("description") ||
-      line.toLowerCase().includes("unit") ||
-      line.toLowerCase().includes("quantity") ||
-      line.toLowerCase().includes("rate") ||
-      line.toLowerCase().includes("amount")
-    );
+    const headerIndex = lines.findIndex(line => {
+      if (!line || typeof line !== 'string') return false;
+      const lowerLine = line.toLowerCase();
+      return lowerLine.includes("item") || 
+        lowerLine.includes("description") ||
+        lowerLine.includes("unit") ||
+        lowerLine.includes("quantity") ||
+        lowerLine.includes("rate") ||
+        lowerLine.includes("amount");
+    });
     
     // If no header found, return the original text in a pre tag
     if (headerIndex === -1) {
@@ -190,15 +203,32 @@ const QsTools = () => {
     
     // Process the table rows
     const headerLine = lines[headerIndex];
-    let headers = [];
+    let originalHeaders = [];
     
     // Parse headers
     if (hasPipeSeparators) {
-      headers = headerLine.split('|')
+      originalHeaders = headerLine.split('|')
         .map(cell => cell.trim())
         .filter(cell => cell);
     } else {
-      headers = headerLine.split(/\s{2,}/).map(cell => cell.trim()).filter(cell => cell);
+      originalHeaders = headerLine.split(/\s{2,}/).map(cell => cell.trim()).filter(cell => cell);
+    }
+    
+    // Reorder headers to put unit after quantity
+    let headers = [...originalHeaders];
+    
+    // Find the indexes of unit and quantity columns
+    const unitIndex = headers.findIndex(header => 
+      header && typeof header === 'string' && header.toLowerCase().includes('unit'));
+    const quantityIndex = headers.findIndex(header => 
+      header && typeof header === 'string' && header.toLowerCase().includes('quantity'));
+      
+    // Always place unit after quantity if both columns exist
+    if (unitIndex !== -1 && quantityIndex !== -1) {
+      // Remove the unit column
+      const unitHeader = headers.splice(unitIndex, 1)[0];
+      // Insert it after quantity
+      headers.splice(quantityIndex > unitIndex ? quantityIndex - 1 : quantityIndex, 0, unitHeader);
     }
     
     // Process data rows
@@ -220,9 +250,10 @@ const QsTools = () => {
       }
       
       // If it's a total/subtotal row, handle specially
-      const isTotal = line.toLowerCase().includes('total') || 
+      const isTotal = (line && typeof line === 'string') ? (
+                      line.toLowerCase().includes('total') || 
                       line.toLowerCase().includes('subtotal') ||
-                      line.toLowerCase().includes('grand total') ||
+                      line.toLowerCase().includes('grand total')) : false ||
                       cells.some(cell => 
                         cell.toLowerCase().includes('total') ||
                         cell.toLowerCase().includes('subtotal')
@@ -235,41 +266,63 @@ const QsTools = () => {
                               (cells.length > 1 && cells[0].trim() && !cells[1].trim() && !isTotal) ||
                               cells.some(c => /^[A-Z][\.:]/.test(c));
       
-      // Add color-coding for LKR values
-      const formattedCells = cells.map(cell => {
-        // Check if the cell contains a number with commas and potentially LKR
-        if (/[\d,]+(\.\d+)?/.test(cell) && (
-            headers.some(h => h.toLowerCase().includes('amount')) || 
-            headers.some(h => h.toLowerCase().includes('rate'))
-        )) {
-          // If it's a currency cell, format it
-          return cell.includes('LKR') ? cell : 
-                 cell.trim() ? `LKR ${cell.trim()}` : cell;
+      // Clean and format cells - remove symbols and add LKR for currency (but not for quantity)
+      let formattedCells = cells.map((cell, cellIdx) => {
+        // First, remove unwanted symbols like *, #, etc.
+        let cleanedCell = cell && typeof cell === 'string' ? cell.replace(/[*#]/g, '').trim() : '';
+        
+        // Then check if the cleaned cell contains a number with commas
+        if (/[\d,]+(\.\d+)?/.test(cleanedCell)) {
+          // Check header for this cell in original order
+          const originalHeader = originalHeaders[cellIdx];
+          const isAmountOrRate = originalHeader && typeof originalHeader === 'string' && (
+            originalHeader.toLowerCase().includes('amount') || 
+            originalHeader.toLowerCase().includes('rate')
+          );
+          
+          const isQuantityColumn = originalHeader && typeof originalHeader === 'string' && 
+            originalHeader.toLowerCase().includes('quantity');
+            
+          if (isAmountOrRate && !isQuantityColumn) {
+            // If it's a currency cell, format it
+            return cleanedCell && typeof cleanedCell === 'string' && cleanedCell.includes('LKR') ? cleanedCell : 
+                   cleanedCell && typeof cleanedCell === 'string' && cleanedCell.trim() ? `LKR ${cleanedCell.trim()}` : cleanedCell;
+          }
         }
-        return cell;
+        return cleanedCell;
       });
       
       if (cells.length > 0) {
+        // Reorder the cells to match the header order - always put unit after quantity
+        if (unitIndex !== -1 && quantityIndex !== -1) {
+          // For each row, move unit cell to after quantity
+          const unitCell = formattedCells.splice(unitIndex, 1)[0];
+          // We need to account for index shifting when removing elements
+          const targetIndex = quantityIndex > unitIndex ? quantityIndex - 1 : quantityIndex;
+          formattedCells.splice(targetIndex + 1, 0, unitCell);
+        }
+        
         dataRows.push({ cells: formattedCells, isTotal, isSectionHeader });
       }
     }
     
     // Add CSS header class based on header content
     const getHeaderClass = (header) => {
+      if (!header || typeof header !== 'string') return 'bg-orange-50';
       const headerText = header.toLowerCase();
       if (headerText.includes('item') || headerText.includes('code'))
-        return 'w-24 bg-blue-50';
+        return 'w-24 bg-orange-50';
       if (headerText.includes('description'))
-        return 'w-auto max-w-sm bg-blue-50';
+        return 'w-auto max-w-sm bg-orange-50';
       if (headerText.includes('unit'))
-        return 'w-20 bg-blue-50';
+        return 'w-20 bg-orange-50';
       if (headerText.includes('quantity'))
-        return 'w-28 bg-blue-50';
+        return 'w-28 bg-orange-50';
       if (headerText.includes('rate'))
-        return 'w-32 bg-blue-50';
+        return 'w-32 bg-orange-50';
       if (headerText.includes('amount'))
-        return 'w-36 bg-blue-50';
-      return 'bg-blue-50';
+        return 'w-36 bg-orange-50';
+      return 'bg-orange-50';
     };
     
     // Render the formatted table
@@ -277,12 +330,12 @@ const QsTools = () => {
       <div className="overflow-x-auto">
         <div className="border border-gray-200 rounded-xl shadow-md">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+            <thead className="bg-gradient-to-r from-orange-600 to-orange-700 text-black">
               <tr>
                 {headers.map((header, index) => (
                   <th 
                     key={index} 
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider border-r border-blue-500 last:border-r-0 ${getHeaderClass(header)}`}
+                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider border-r border-orange-500 last:border-r-0 ${getHeaderClass(header)}`}
                   >
                     {header}
                   </th>
@@ -294,44 +347,51 @@ const QsTools = () => {
                 <tr 
                   key={rowIndex} 
                   className={row.isTotal 
-                    ? 'bg-gradient-to-r from-blue-50 to-blue-100 font-semibold border-t-2 border-blue-200' 
+                    ? 'bg-gradient-to-r from-orange-50 to-orange-100 font-semibold border-t-2 border-orange-200' 
                     : row.isSectionHeader
                     ? 'bg-gray-100 font-semibold'
                     : rowIndex % 2 === 0 
-                      ? 'bg-white hover:bg-blue-50 transition-colors' 
-                      : 'bg-gray-50 hover:bg-blue-50 transition-colors'
+                      ? 'bg-white hover:bg-orange-50 transition-colors' 
+                      : 'bg-gray-50 hover:bg-orange-50 transition-colors'
                   }
                 >
                   {row.cells.map((cell, cellIndex) => {
                     // Determine if this is a currency cell (amount or rate)
-                    const isCurrency = headers[cellIndex] && 
-                      (headers[cellIndex].toLowerCase().includes('amount') || 
-                       headers[cellIndex].toLowerCase().includes('rate'));
+                    const headerAtIndex = headers[cellIndex];
+                    const isCurrency = headerAtIndex && typeof headerAtIndex === 'string' && 
+                      (headerAtIndex.toLowerCase().includes('amount') || 
+                       headerAtIndex.toLowerCase().includes('rate'));
                     
                     // Determine if this is a quantity cell
-                    const isQuantity = headers[cellIndex] && 
-                      headers[cellIndex].toLowerCase().includes('quantity');
+                    const isQuantity = headerAtIndex && typeof headerAtIndex === 'string' && 
+                      headerAtIndex.toLowerCase().includes('quantity');
                     
                     // Determine if this is an item code cell
-                    const isItemCode = headers[cellIndex] && 
-                      (headers[cellIndex].toLowerCase().includes('item') || 
-                       headers[cellIndex].toLowerCase().includes('code'));
+                    const isItemCode = headerAtIndex && typeof headerAtIndex === 'string' && 
+                      (headerAtIndex.toLowerCase().includes('item') || 
+                       headerAtIndex.toLowerCase().includes('code'));
+                    
+                    // Determine if this is a unit cell
+                    const isUnit = headerAtIndex && typeof headerAtIndex === 'string' && 
+                      headerAtIndex.toLowerCase().includes('unit');
                     
                     // Determine if this cell contains a number
-                    const isNumber = /^[\d,]+(\.\d+)?$/.test(cell.replace('LKR', '').trim());
+                    const isNumber = cell && typeof cell === 'string' ? /^[\d,]+(\.\d+)?$/.test(cell.replace('LKR', '').trim()) : false;
                     
                     // Special styling for different cell types
                     let cellStyle = '';
                     if (isCurrency) {
                       cellStyle = 'text-right font-medium text-emerald-700';
                     } else if (isQuantity && isNumber) {
-                      cellStyle = 'text-right font-medium text-blue-700';
+                      cellStyle = 'text-right font-medium text-orange-700';
+                    } else if (isUnit) {
+                      cellStyle = 'text-center font-medium text-indigo-700';
                     } else if (isItemCode) {
                       cellStyle = 'font-medium text-gray-900';
-                    } else if (cell.toLowerCase().includes('total')) {
+                    } else if (cell && typeof cell === 'string' && cell.toLowerCase().includes('total')) {
                       cellStyle = 'font-semibold text-gray-900';
                     } else if (row.isSectionHeader) {
-                      cellStyle = 'font-semibold text-blue-800';
+                      cellStyle = 'font-semibold text-orange-800';
                     }
                     
                     return (
@@ -340,13 +400,13 @@ const QsTools = () => {
                         className={`px-4 py-2.5 text-sm border-r border-gray-200 last:border-r-0 ${cellStyle || 'text-gray-700'}`}
                         colSpan={row.isSectionHeader && cellIndex === 0 && row.cells.length === 1 ? headers.length : 1}
                       >
-                        {/* Format currency cells */}
-                        {isCurrency && isNumber ? (
+                        {/* Format currency cells, but not quantity cells */}
+                        {isCurrency && isNumber && !isQuantity ? (
                           <span className="inline-flex items-center">
-                            {cell.includes('LKR') ? cell : `LKR ${cell}`}
+                            {cell && typeof cell === 'string' && cell.includes('LKR') ? cell : `LKR ${cell}`}
                           </span>
                         ) : (
-                          cell
+                          cell || ''
                         )}
                       </td>
                     );
@@ -514,8 +574,8 @@ const QsTools = () => {
       <div className={`flex-1 transition-all duration-300 overflow-auto ${sidebarCollapsed ? 'ml-20' : 'ml-64'} p-4`}>
         <div className="qs-container max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-xl my-8">
           <div className="mb-6 text-center">
-            <h1 className="text-3xl font-bold text-blue-800 mb-2 flex items-center justify-center">
-              <svg className="w-8 h-8 mr-3 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <h1 className="text-3xl font-bold text-orange-800 mb-2 flex items-center justify-center">
+              <svg className="w-8 h-8 mr-3 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               QsTools – Sri Lankan Construction Estimator
@@ -540,12 +600,12 @@ const QsTools = () => {
             <button
               className={`py-3 px-5 font-medium flex items-center rounded-t-lg transition-all ${
                 activeTab === "takeoff" 
-                  ? "text-blue-600 border-b-2 border-blue-600 bg-gradient-to-b from-blue-50 to-white" 
-                  : "text-gray-600 hover:text-blue-500 hover:bg-gray-50"
+                  ? "text-orange-600 border-b-2 border-orange-600 bg-gradient-to-b from-orange-50 to-white" 
+                  : "text-gray-600 hover:text-orange-500 hover:bg-gray-50"
               }`}
               onClick={() => setActiveTab("takeoff")}
             >
-              <svg className={`w-5 h-5 mr-2 ${activeTab === "takeoff" ? "text-blue-600" : "text-gray-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className={`w-5 h-5 mr-2 ${activeTab === "takeoff" ? "text-orange-600" : "text-gray-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
               Take-off Analysis
@@ -553,13 +613,13 @@ const QsTools = () => {
             <button
               className={`py-3 px-5 font-medium flex items-center rounded-t-lg transition-all ${
                 activeTab === "boq" 
-                  ? "text-blue-600 border-b-2 border-blue-600 bg-gradient-to-b from-blue-50 to-white" 
-                  : "text-gray-600 hover:text-blue-500 hover:bg-gray-50"
+                  ? "text-orange-600 border-b-2 border-orange-600 bg-gradient-to-b from-orange-50 to-white" 
+                  : "text-gray-600 hover:text-orange-500 hover:bg-gray-50"
               }`}
               onClick={() => setActiveTab("boq")}
               disabled={!boqResult}
             >
-              <svg className={`w-5 h-5 mr-2 ${activeTab === "boq" ? "text-blue-600" : "text-gray-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className={`w-5 h-5 mr-2 ${activeTab === "boq" ? "text-orange-600" : "text-gray-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
               Bill of Quantities
@@ -573,21 +633,21 @@ const QsTools = () => {
           
           {activeTab === "takeoff" ? (
             <div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Upload Section - Redesigned with card-based layout */}
-                <div className="upload-section bg-gradient-to-br from-white to-blue-50 p-6 rounded-xl shadow-md border border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Upload Section - Redesigned with card-based layout (made smaller) */}
+                <div className="upload-section bg-gradient-to-br from-white to-orange-50 p-4 rounded-xl shadow-md border border-gray-100 md:col-span-1">
                   <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
                     </svg>
                     Upload Drawing
                   </h2>
                   
                   {/* File Input Area - Improved with better visual feedback */}
-                  <div className="file-input-area mb-5">
+                  <div className="file-input-area mb-4">
                     <div 
-                      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all hover:shadow-md ${
-                        file ? 'border-green-500 bg-green-50' : 'border-blue-300 hover:border-blue-500 hover:bg-blue-50'
+                      className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all hover:shadow-md ${
+                        file ? 'border-green-500 bg-green-50' : 'border-orange-300 hover:border-orange-500 hover:bg-orange-50'
                       }`}
                       onClick={() => fileInputRef.current?.click()}
                     >
@@ -604,7 +664,7 @@ const QsTools = () => {
                           <img 
                             src={previewUrl} 
                             alt="Drawing preview" 
-                            className="max-h-52 mx-auto mb-3 rounded-md shadow-sm object-contain" 
+                            className="max-h-40 mx-auto mb-2 rounded-md shadow-sm object-contain" 
                           />
                           <div className="flex items-center justify-center space-x-2">
                             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -615,39 +675,19 @@ const QsTools = () => {
                         </div>
                       ) : (
                         <div className="upload-prompt">
-                          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
                           </div>
-                          <p className="text-gray-700 font-medium mb-1">Drag and drop your engineering drawing</p>
-                          <p className="text-sm text-gray-500">or click to browse files (JPG, PNG, PDF)</p>
+                          <p className="text-gray-700 font-medium mb-1 text-sm">Upload drawing</p>
+                          <p className="text-xs text-gray-500">(JPG, PNG, PDF)</p>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  {/* Project Selection Dropdown */}
-                  <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Related Project (Optional)
-                    </label>
-                    <select
-                      value={selectedProjectId}
-                      onChange={(e) => setSelectedProjectId(e.target.value)}
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:bg-blue-50 focus:bg-white"
-                    >
-                      <option value="">-- Select a project --</option>
-                      {projects.map((project) => (
-                        <option key={project._id} value={project._id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Associate this analysis with a specific project for better organization
-                    </p>
-                  </div>
+
                   
                   {/* Error message with improved styling */}
                   {error && (
@@ -667,7 +707,7 @@ const QsTools = () => {
                       className={`flex-1 py-3 px-4 rounded-lg font-medium flex items-center justify-center ${
                         loading || !file 
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow'
+                          : 'bg-gradient-to-r from-orange-600 to-orange-700 text-white hover:from-orange-700 hover:to-orange-800 transition-all shadow-sm hover:shadow'
                       }`}
                     >
                       {loading ? (
@@ -702,11 +742,11 @@ const QsTools = () => {
                   </div>
                 </div>
                 
-                {/* Results Section - Redesigned with card-based layout */}
-                <div className="results-section bg-gradient-to-br from-white to-gray-50 p-6 rounded-xl shadow-md border border-gray-100">
+                {/* Results Section - Redesigned with card-based layout (made wider) */}
+                <div className="results-section bg-gradient-to-br from-white to-gray-50 p-6 rounded-xl shadow-md border border-gray-100 md:col-span-2">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                      <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2z" />
                       </svg>
                       Take-off Results
@@ -745,7 +785,7 @@ const QsTools = () => {
                           
                           <button 
                             onClick={() => setActiveTab("boq")}
-                            className="py-2 px-3 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center shadow-sm hover:shadow"
+                            className="py-2 px-3 rounded-lg text-sm font-medium bg-orange-600 text-white hover:bg-orange-700 transition-colors flex items-center shadow-sm hover:shadow"
                             title="Create Bill of Quantities"
                           >
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -759,13 +799,13 @@ const QsTools = () => {
                   </div>
                   
                   {result ? (
-                    <div className="result-content bg-white p-4 rounded-lg border border-gray-200 shadow-sm max-h-[28rem] overflow-y-auto">
+                    <div className="result-content bg-white p-4 rounded-lg border border-gray-200 shadow-sm max-h-[32rem] overflow-y-auto w-full">
                       {formatTableDisplay(result)}
                     </div>
                   ) : (
                     <div className="empty-state text-center py-14 bg-white rounded-lg border border-gray-200 shadow-sm">
-                      <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-10 h-10 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
@@ -777,38 +817,38 @@ const QsTools = () => {
               </div>
               
               {/* Instructions - Redesigned with better visuals */}
-              <div className="instructions mt-8 bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 shadow-sm">
-                <h3 className="text-lg font-medium text-blue-800 mb-3 flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <div className="instructions mt-8 bg-gradient-to-r from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200 shadow-sm">
+                <h3 className="text-lg font-medium text-orange-800 mb-3 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   How to Use
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                      <span className="text-blue-700 font-bold text-lg">1</span>
+                  <div className="bg-white p-4 rounded-lg border border-orange-100 shadow-sm">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+                      <span className="text-orange-700 font-bold text-lg">1</span>
                     </div>
                     <h4 className="font-medium text-gray-800 mb-1">Upload Drawing</h4>
                     <p className="text-sm text-gray-600">Upload an engineering drawing or blueprint in JPG, PNG or PDF format</p>
                   </div>
-                  <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                      <span className="text-blue-700 font-bold text-lg">2</span>
+                  <div className="bg-white p-4 rounded-lg border border-orange-100 shadow-sm">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+                      <span className="text-orange-700 font-bold text-lg">2</span>
                     </div>
                     <h4 className="font-medium text-gray-800 mb-1">Analyze</h4>
                     <p className="text-sm text-gray-600">Click "Analyze Drawing" to process the image and generate take-off data</p>
                   </div>
-                  <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                      <span className="text-blue-700 font-bold text-lg">3</span>
+                  <div className="bg-white p-4 rounded-lg border border-orange-100 shadow-sm">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+                      <span className="text-orange-700 font-bold text-lg">3</span>
                     </div>
                     <h4 className="font-medium text-gray-800 mb-1">Review Results</h4>
                     <p className="text-sm text-gray-600">Review the generated quantity take-off table with measurements</p>
                   </div>
-                  <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                      <span className="text-blue-700 font-bold text-lg">4</span>
+                  <div className="bg-white p-4 rounded-lg border border-orange-100 shadow-sm">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+                      <span className="text-orange-700 font-bold text-lg">4</span>
                     </div>
                     <h4 className="font-medium text-gray-800 mb-1">Export or Create BOQ</h4>
                     <p className="text-sm text-gray-600">Export to Excel or create a Bill of Quantities with cost estimates in LKR</p>
@@ -821,9 +861,9 @@ const QsTools = () => {
               {/* BOQ Section */}
               <div className="grid grid-cols-1 gap-6">
                 {/* Project Info Form */}
-                <div className="project-info-section bg-gradient-to-br from-white to-blue-50 p-6 rounded-xl shadow-md border border-gray-100">
+                <div className="project-info-section bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl shadow-md border border-gray-100">
                   <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Project Information
@@ -832,7 +872,7 @@ const QsTools = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-4 h-4 mr-1 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         Project Name
@@ -841,13 +881,13 @@ const QsTools = () => {
                         type="text"
                         value={projectInfo.projectName}
                         onChange={(e) => setProjectInfo({...projectInfo, projectName: e.target.value})}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:bg-blue-50 focus:bg-white"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 transition-all bg-white hover:bg-orange-50 focus:bg-white"
                         placeholder="Enter project name"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-4 h-4 mr-1 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
@@ -857,13 +897,13 @@ const QsTools = () => {
                         type="text"
                         value={projectInfo.location}
                         onChange={(e) => setProjectInfo({...projectInfo, location: e.target.value})}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:bg-blue-50 focus:bg-white"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 transition-all bg-white hover:bg-orange-50 focus:bg-white"
                         placeholder="Enter location in Sri Lanka"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-4 h-4 mr-1 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         Client
@@ -872,7 +912,7 @@ const QsTools = () => {
                         type="text"
                         value={projectInfo.client}
                         onChange={(e) => setProjectInfo({...projectInfo, client: e.target.value})}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:bg-blue-50 focus:bg-white"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 transition-all bg-white hover:bg-orange-50 focus:bg-white"
                         placeholder="Enter client name"
                       />
                     </div>
@@ -895,7 +935,7 @@ const QsTools = () => {
                       className={`py-2.5 px-6 rounded-lg font-medium flex items-center ${
                         generatingBOQ || !result
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow'
+                          : 'bg-gradient-to-r from-orange-600 to-orange-700 text-white hover:from-orange-700 hover:to-orange-800 transition-all shadow-sm hover:shadow'
                       }`}
                     >
                       {generatingBOQ ? (
@@ -922,7 +962,7 @@ const QsTools = () => {
                 <div className="boq-results-section bg-gradient-to-br from-white to-gray-50 p-6 rounded-xl shadow-md border border-gray-100">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                      <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
                       Bill of Quantities (BOQ)
@@ -964,8 +1004,8 @@ const QsTools = () => {
                     </div>
                   ) : (
                     <div className="empty-state text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-                      <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-10 h-10 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
@@ -977,17 +1017,17 @@ const QsTools = () => {
                 
                 {/* Added BOQ Information Section */}
                 {boqResult && (
-                  <div className="boq-info bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 shadow-sm">
-                    <h3 className="text-lg font-medium text-blue-800 mb-3 flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <div className="boq-info bg-gradient-to-r from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200 shadow-sm">
+                    <h3 className="text-lg font-medium text-orange-800 mb-3 flex items-center">
+                      <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       BOQ Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
+                      <div className="bg-white p-4 rounded-lg border border-orange-100 shadow-sm">
                         <h4 className="font-medium text-gray-800 mb-2 flex items-center">
-                          <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <svg className="w-4 h-4 mr-1 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                           </svg>
                           Standards Used
@@ -998,9 +1038,9 @@ const QsTools = () => {
                           <li>• BSR (Building Schedule of Rates) for Sri Lankan construction</li>
                         </ul>
                       </div>
-                      <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
+                      <div className="bg-white p-4 rounded-lg border border-orange-100 shadow-sm">
                         <h4 className="font-medium text-gray-800 mb-2 flex items-center">
-                          <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <svg className="w-4 h-4 mr-1 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
                           Currency Information
